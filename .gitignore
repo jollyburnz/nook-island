@@ -1,0 +1,15 @@
+# Ignore dependencies
+node_modules/
+/vendor
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE settings
+.vscode/
+.idea/
+
+# Ignore secrets
+.env
+*.pem
