@@ -28,7 +28,7 @@ function createWindow() {
         title: "Nook Island",
         backgroundColor: "#78b8a0", // cozy island green while loading
         webPreferences: {
-            preload: path.join(__dirname, "preload.js"),
+            preload: path.join(__dirname, "preload.cjs"),
             contextIsolation: true,
             nodeIntegration: false,
             sandbox: false, // needed so preload can use require
@@ -50,11 +50,13 @@ function createWindow() {
 }
 app.whenReady().then(async () => {
     await initDataDir();
-    // Layer 4 smoke test — remove after Layer 5 is built
-    if (process.env.NOOK_LAYER4_TEST === "1") {
-        await runMapleTest();
-    }
     createWindow();
+    // Layer 5 smoke test — remove after Layer 6 is built
+    if (process.env.NOOK_LAYER4_TEST === "1") {
+        const wins = BrowserWindow.getAllWindows();
+        if (wins[0])
+            await runMapleTest(wins[0]);
+    }
     app.on("activate", () => {
         // Re-create window on macOS dock click if no windows are open
         if (BrowserWindow.getAllWindows().length === 0) {

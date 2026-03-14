@@ -1,5 +1,6 @@
-import { ipcMain, BrowserWindow } from "electron";
+import { ipcMain, BrowserWindow, shell } from "electron";
 import { CHANNELS } from "./channels.js";
+import { getTaskPaths } from "../tasks.js";
 
 export function registerHandlers(win: BrowserWindow): void {
   ipcMain.handle(CHANNELS.TASK_SUBMIT, (_event, desc: string) => {
@@ -27,10 +28,14 @@ export function registerHandlers(win: BrowserWindow): void {
     return null; // Layer 3 will return real journal data
   });
 
-  ipcMain.handle(CHANNELS.OUTPUT_OPEN, (_event, id: string) => {
+  ipcMain.handle(CHANNELS.OUTPUT_OPEN, async (_event, id: string) => {
     console.log("[main] openOutput →", id);
-    // Layer 7+ will call shell.openPath() with the real bottle file path
-    void win; // suppress unused warning until Layer 7
+    const { bottle } = getTaskPaths(id);
+    const result = await shell.openPath(bottle);
+    if (result) {
+      console.error("[main] openPath failed:", result);
+      return { ok: false, error: result };
+    }
     return { ok: true };
   });
 }
