@@ -1,15 +1,16 @@
 /**
- * Layer 8 — Two-step Sherb orchestrator.
+ * Layer 9 — Full MVP villager chain orchestrator.
  * Step 1: plan-only query() (no tools, maxTurns: 1) → JSON plan
- * Step 2: exec query() ("Agent" + "Read" tools, Maple in agents roster)
+ * Step 2: exec query() with Maple + Zucker + Marshal in agents roster
  *
  * NOTE: The subagent-spawning tool is "Agent" (not "Task" as PLANNING.md says).
  * Verified from node_modules/@anthropic-ai/claude-agent-sdk/sdk-tools.d.ts (AgentInput).
  *
- * Replace this file with server/orchestrator.ts in Layer 9+.
+ * NOTE: Marshal gets ["Read", "Write"] even though PLANNING.md says ["Read"] —
+ * Marshal must Write to append its critique section to the bottle file.
  */
 import { query } from "@anthropic-ai/claude-agent-sdk";
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, shell } from "electron";
 import { CHANNELS } from "./ipc/channels.js";
 import {
   generateTaskId,
@@ -32,15 +33,27 @@ Use exactly this shape:
 {
   "task": "one sentence description of the task",
   "steps": [
-    { "villager": "maple", "action": "what maple should do" }
+    { "villager": "maple", "action": "what maple should do" },
+    { "villager": "zucker", "action": "what zucker should do" },
+    { "villager": "marshal", "action": "what marshal should do" }
   ]
 }
-Available villagers for this session: maple (research).`;
+Available villagers for this session: maple (research), zucker (writing/drafting), marshal (critique/review).
+For writing tasks: always include maple → zucker → marshal in that order.`;
 
 const SHERB_EXEC_SYSTEM = `You are Sherb, the island planner on Nook Island.
 Execute the approved plan by summoning each villager using the Agent tool.
 Delegate each step exactly as listed in the plan.
-Do not do the work yourself — use the Agent tool to dispatch villagers in order.`;
+Do not do the work yourself — use the Agent tool to dispatch villagers in order.
+
+Available villagers and their roles:
+- maple: Scout — web research, writes notes + appends findings to bottle
+- zucker: Producer — reads Maple's notes, drafts the Final Output section in the bottle
+- marshal: Critic — reviews Zucker's draft, writes verdict to bottle (APPROVED or REVISION NEEDED)
+
+For writing tasks: summon maple first, then zucker to draft, then marshal to review.
+If marshal returns REVISION NEEDED, summon zucker again to revise based on the critique.
+Marshal may only reject once — if marshal reviews a second time, they must approve.`;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -61,6 +74,49 @@ Instructions:
 3. Do NOT touch the "## ✉️ Final Output" section.
 
 Follow CLAUDE.md rules. Keep your tone friendly and concise.`;
+}
+
+function buildZuckerPrompt(paths: { notes: string; bottle: string }): string {
+  return `You are Zucker, a laid-back octopus villager and the island's writer on Nook Island.
+Your task is described in the prompt Sherb gave you.
+
+Your files:
+- Notes (Maple's raw research): ${paths.notes}
+- Bottle (shared deliverable): ${paths.bottle}
+
+Instructions:
+1. Read Maple's research from the notes file.
+2. Read the current bottle file.
+3. Write the "## ✉️ Final Output" section — replace the placeholder "(villagers are working on it...)" with your clean draft.
+4. Append your section under "## 🗺️ Journey":
+   - Heading: "### 🐙 Zucker drafted"
+   - 1-2 sentences on your drafting approach
+   - End with a 1-2 sentence handoff note for Marshal
+5. Do NOT touch Maple's "### 🐻 Maple researched" section.
+
+Follow CLAUDE.md rules. Write clearly and concisely in Jackson's preferred style (casual but sharp).`;
+}
+
+function buildMarshalPrompt(paths: { notes: string; bottle: string }): string {
+  return `You are Marshal, a smug squirrel villager and the island's critic on Nook Island.
+Your task is described in the prompt Sherb gave you.
+
+Your files:
+- Notes (Maple's raw research): ${paths.notes}
+- Bottle (shared deliverable): ${paths.bottle}
+
+Instructions:
+1. Read the bottle file — focus on "## ✉️ Final Output" (Zucker's draft).
+2. Review for: accuracy, clarity, tone, completeness, and Jackson's style (concise, bullet-friendly, casual but sharp).
+3. Append your section under "## 🗺️ Journey":
+   - Heading: "### 🐿️ Marshal reviewed"
+   - State verdict: APPROVED or REVISION NEEDED
+   - If APPROVED: 1-2 sentences on what works well
+   - If REVISION NEEDED: specific bullets listing exactly what to fix
+4. Do NOT edit the Final Output section yourself — that's Zucker's job.
+5. Do NOT touch Maple's or Zucker's journey sections.
+
+Follow CLAUDE.md rules. Be direct: "It's fine. It's almost fine. Here's what's wrong."`;
 }
 
 /** Extract JSON plan from Sherb's result string. Tries direct parse, falls back to regex. */
@@ -89,7 +145,7 @@ function parsePlan(raw: string): SherbPlan | null {
  * @param win              The renderer BrowserWindow (receives IPC events).
  * @param description      The raw task description from the player.
  * @param onPlanProposed   Callback — receives the proposed plan, returns true
- *                         to approve or false to reject. In the Layer 8 smoke
+ *                         to approve or false to reject. In the Layer 9 smoke
  *                         test this auto-approves; Layer 11 will wait for
  *                         PLAN_APPROVE IPC from the renderer.
  */
@@ -109,7 +165,7 @@ export async function runTwoStepSherb(
     timestamp: new Date().toISOString(),
   });
 
-  console.log("[sherb] ── Layer 8: two-step Sherb ──");
+  console.log("[sherb] ── Layer 9: full villager chain ──");
   console.log("[sherb] taskId:", taskId);
   console.log("[sherb] bottle:", paths.bottle);
 
@@ -194,7 +250,7 @@ Pass them the bottle and notes file paths so they know where to write their outp
       systemPrompt: SHERB_EXEC_SYSTEM,
       allowedTools: ["Agent", "Read", "Write", "WebSearch"],
       // NOTE: parent allowedTools gates subagent tool execution even in dontAsk mode.
-      // Write and WebSearch here are used by Maple (not Sherb directly).
+      // Write and WebSearch here are used by Maple/Zucker/Marshal (not Sherb directly).
       // Sherb's system prompt ensures he only uses Agent and Read.
       agents: {
         maple: {
@@ -203,10 +259,22 @@ Pass them the bottle and notes file paths so they know where to write their outp
           tools: ["WebSearch", "Read", "Write"],
           prompt: buildMaplePrompt(paths),
         },
+        zucker: {
+          description:
+            "Use Zucker to draft the Final Output. He reads Maple's notes and writes the deliverable to the top of the bottle file.",
+          tools: ["Read", "Write"],
+          prompt: buildZuckerPrompt(paths),
+        },
+        marshal: {
+          description:
+            "Use Marshal to review Zucker's draft. He reads the bottle and appends APPROVED or REVISION NEEDED with specific critique.",
+          tools: ["Read", "Write"],
+          prompt: buildMarshalPrompt(paths),
+        },
       },
       permissionMode: "dontAsk",
-      maxTurns: 20,
-      maxBudgetUsd: 0.5,
+      maxTurns: 30,
+      maxBudgetUsd: 1.0,
       cwd: app.getAppPath(),
       settingSources: ["project"],
     },
@@ -231,6 +299,8 @@ Pass them the bottle and notes file paths so they know where to write their outp
           outputPath: paths.bottle,
           cost_usd: msg.total_cost_usd ?? 0,
         });
+        // Open the bottle in the default markdown editor — the mailbox delivery moment
+        await shell.openPath(paths.bottle);
       }
     }
   }
