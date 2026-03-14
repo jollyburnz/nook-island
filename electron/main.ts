@@ -1,6 +1,7 @@
 import { app, BrowserWindow, shell } from "electron";
 import path from "path";
 import { registerHandlers } from "./ipc/handlers";
+import { initDataDir } from "./data";
 
 // Fix PATH for macOS — ensures CLI tools (node, claude) are accessible from main process
 // Must be set before createWindow()
@@ -50,7 +51,8 @@ function createWindow(): void {
   });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await initDataDir();
   createWindow();
 
   app.on("activate", () => {

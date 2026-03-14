@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const path_1 = __importDefault(require("path"));
 const handlers_1 = require("./ipc/handlers");
+const data_1 = require("./data");
 // Fix PATH for macOS — ensures CLI tools (node, claude) are accessible from main process
 // Must be set before createWindow()
 if (process.platform === "darwin") {
@@ -49,7 +50,8 @@ function createWindow() {
         return { action: "deny" };
     });
 }
-electron_1.app.whenReady().then(() => {
+electron_1.app.whenReady().then(async () => {
+    await (0, data_1.initDataDir)();
     createWindow();
     electron_1.app.on("activate", () => {
         // Re-create window on macOS dock click if no windows are open
