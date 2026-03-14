@@ -1,19 +1,11 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.VILLAGERS = void 0;
-exports.getDataDir = getDataDir;
-exports.initDataDir = initDataDir;
-const electron_1 = require("electron");
-const promises_1 = __importDefault(require("fs/promises"));
-const path_1 = __importDefault(require("path"));
+import { app } from "electron";
+import fs from "fs/promises";
+import path from "path";
 // ~/Library/Application Support/NookIsland/
-function getDataDir() {
-    return path_1.default.join(electron_1.app.getPath("appData"), "NookIsland");
+export function getDataDir() {
+    return path.join(app.getPath("appData"), "NookIsland");
 }
-exports.VILLAGERS = [
+export const VILLAGERS = [
     "sherb",
     "maple",
     "zucker",
@@ -32,22 +24,22 @@ function emptyJournal(villagerId) {
         baseline: null,
     };
 }
-async function initDataDir() {
+export async function initDataDir() {
     const base = getDataDir();
-    const journals = path_1.default.join(base, "journals");
-    const tasks = path_1.default.join(base, "tasks");
+    const journals = path.join(base, "journals");
+    const tasks = path.join(base, "tasks");
     // Create directories — no-op if they already exist
-    await promises_1.default.mkdir(journals, { recursive: true });
-    await promises_1.default.mkdir(tasks, { recursive: true });
+    await fs.mkdir(journals, { recursive: true });
+    await fs.mkdir(tasks, { recursive: true });
     // Seed each journal file only if it doesn't exist yet — never overwrite
-    for (const id of exports.VILLAGERS) {
-        const file = path_1.default.join(journals, `${id}.json`);
+    for (const id of VILLAGERS) {
+        const file = path.join(journals, `${id}.json`);
         try {
-            await promises_1.default.access(file);
+            await fs.access(file);
             // file exists — leave it alone
         }
         catch {
-            await promises_1.default.writeFile(file, JSON.stringify(emptyJournal(id), null, 2), "utf8");
+            await fs.writeFile(file, JSON.stringify(emptyJournal(id), null, 2), "utf8");
             console.log(`[data] created journal: ${id}.json`);
         }
     }

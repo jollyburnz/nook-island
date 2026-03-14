@@ -1,9 +1,6 @@
-"use strict";
 // IPC channel names shared between main process and preload.
 // Defined here so both sides always use the same string literals.
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.CHANNELS = void 0;
-exports.CHANNELS = {
+export const CHANNELS = {
     // Renderer → Main
     TASK_SUBMIT: "island:task:submit",
     PLAN_APPROVE: "island:plan:approve",

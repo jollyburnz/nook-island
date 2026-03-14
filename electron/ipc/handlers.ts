@@ -1,5 +1,5 @@
 import { ipcMain, BrowserWindow } from "electron";
-import { CHANNELS } from "./channels";
+import { CHANNELS } from "./channels.js";
 
 export function registerHandlers(win: BrowserWindow): void {
   ipcMain.handle(CHANNELS.TASK_SUBMIT, (_event, desc: string) => {

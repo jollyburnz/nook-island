@@ -1,7 +1,11 @@
 import { app, BrowserWindow, shell } from "electron";
 import path from "path";
-import { registerHandlers } from "./ipc/handlers";
-import { initDataDir } from "./data";
+import { fileURLToPath } from "url";
+import { registerHandlers } from "./ipc/handlers.js";
+import { initDataDir } from "./data.js";
+import { runMapleTest } from "./agentTest.js";
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 // Fix PATH for macOS — ensures CLI tools (node, claude) are accessible from main process
 // Must be set before createWindow()
@@ -53,6 +57,12 @@ function createWindow(): void {
 
 app.whenReady().then(async () => {
   await initDataDir();
+
+  // Layer 4 smoke test — remove after Layer 5 is built
+  if (process.env.NOOK_LAYER4_TEST === "1") {
+    await runMapleTest();
+  }
+
   createWindow();
 
   app.on("activate", () => {

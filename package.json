@@ -2,6 +2,7 @@
   "name": "nook-island",
   "version": "1.0.0",
   "description": "A cozy Animal Crossing-style productivity tool powered by AI agents.",
+  "type": "module",
   "main": "dist-electron/main.js",
   "author": "Jackson Lin",
   "license": "ISC",
@@ -29,6 +30,7 @@
     "wait-on": "^7.0.0"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.76",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   }

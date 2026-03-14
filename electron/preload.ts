@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
-import { CHANNELS } from "./ipc/channels";
+import { CHANNELS } from "./ipc/channels.js";
 
 contextBridge.exposeInMainWorld("nookIsland", {
   // Renderer → Main (invoke/handle pattern)
