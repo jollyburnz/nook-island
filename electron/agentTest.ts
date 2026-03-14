@@ -1,68 +1,27 @@
 /**
- * Layer 7: smoke test with real bottle file output.
- * Run with NOOK_LAYER4_TEST=1 to verify the SDK writes _bottle.md and _notes.md to disk.
- * This file is deleted and replaced by server/orchestrator.ts in later layers.
+ * Layer 8 smoke test — two-step Sherb.
+ * Run with NOOK_LAYER4_TEST=1.
  *
- * Estimated cost per run: ~$0.05–0.15 (file tools enabled, brief task).
+ * Calls runTwoStepSherb with an auto-approve callback (simulates player click).
+ * Layer 11 replaces the callback with an IPC round-trip to the renderer.
+ *
+ * Done when:
+ *   1. Plan JSON logged after step 1
+ *   2. PLAN_PROPOSED event visible in DevTools
+ *   3. Maple writes _notes.md and appends to _bottle.md after step 2
+ *   4. JSONL contains: task_received → plan_proposed → plan_approved → task_complete
  */
-import { query } from "@anthropic-ai/claude-agent-sdk";
-import { app, BrowserWindow } from "electron";
-import { CHANNELS } from "./ipc/channels.js";
-import { generateTaskId, getTaskPaths, initBottleFile, appendTaskEvent } from "./tasks.js";
+import { BrowserWindow } from "electron";
+import { runTwoStepSherb } from "./orchestrator.js";
 
-export async function runMapleTest(win: BrowserWindow): Promise<void> {
-  const taskId = generateTaskId();
-  const paths = getTaskPaths(taskId);
-  const description = "3 Interesting Facts About Animal Crossing";
-
-  await initBottleFile(taskId, description);
-  console.log("[maple] ── starting Layer 7 bottle test ──");
-  console.log("[maple] taskId:", taskId);
-  console.log("[maple] bottle:", paths.bottle);
-
-  const prompt = `You are Maple, a sweet and curious bear cub villager on Nook Island.
-
-Your task: Research 3 interesting facts about Animal Crossing video games.
-
-Your files for this task:
-- Notes file (your raw research): ${paths.notes}
-- Bottle file (shared deliverable): ${paths.bottle}
-
-Instructions:
-1. Write your raw research notes to the notes file (${paths.notes})
-2. Open the bottle file and append your journey section under the "## 🗺️ Journey" heading
-   - Use heading: "### 🐻 Maple researched"
-   - Summarize the 3 facts clearly
-   - End with a 1-2 sentence handoff note (e.g. "Passing the bottle to Zucker to draft the output.")
-3. Do NOT modify the "## ✉️ Final Output" section — that's for a later villager
-
-Follow the Bottle Writing Rules from CLAUDE.md. Keep responses concise and friendly.`;
-
-  for await (const message of query({
-    prompt,
-    options: {
-      systemPrompt:
-        "You are Maple, a sweet and curious bear cub villager on Nook Island. Follow CLAUDE.md rules exactly.",
-      allowedTools: ["Read", "Write", "Edit"],
-      permissionMode: "dontAsk",
-      maxTurns: 10,
-      maxBudgetUsd: 0.25,
-      cwd: app.getAppPath(),
-      settingSources: ["project"],
+export async function runSherbTest(win: BrowserWindow): Promise<void> {
+  await runTwoStepSherb(
+    win,
+    "Research 3 interesting facts about Animal Crossing video games",
+    async (plan) => {
+      console.log("[smoke-test] plan proposed:", JSON.stringify(plan, null, 2));
+      console.log("[smoke-test] auto-approving plan...");
+      return true; // Layer 11 replaces this with IPC wait
     },
-  })) {
-    console.log("[maple]", JSON.stringify(message, null, 2));
-    win.webContents.send(CHANNELS.ISLAND_EVENT, message);
-
-    // Persist result event to JSONL audit trail
-    if (typeof message === "object" && message !== null && "type" in message) {
-      const msg = message as { type: string };
-      if (msg.type === "result") {
-        await appendTaskEvent(taskId, { type: "task_complete", taskId, outputPath: paths.bottle });
-      }
-    }
-  }
-
-  console.log("[maple] ── query complete ──");
-  console.log("[maple] check disk:", paths.bottle);
+  );
 }

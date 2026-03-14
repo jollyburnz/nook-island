@@ -3,7 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { registerHandlers } from "./ipc/handlers.js";
 import { initDataDir } from "./data.js";
-import { runMapleTest } from "./agentTest.js";
+import { runSherbTest } from "./agentTest.js";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 // Fix PATH for macOS — ensures CLI tools (node, claude) are accessible from main process
 // Must be set before createWindow()
@@ -55,7 +55,7 @@ app.whenReady().then(async () => {
     if (process.env.NOOK_LAYER4_TEST === "1") {
         const wins = BrowserWindow.getAllWindows();
         if (wins[0])
-            await runMapleTest(wins[0]);
+            await runSherbTest(wins[0]);
     }
     app.on("activate", () => {
         // Re-create window on macOS dock click if no windows are open

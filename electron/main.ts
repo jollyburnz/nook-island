@@ -3,7 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { registerHandlers } from "./ipc/handlers.js";
 import { initDataDir } from "./data.js";
-import { runMapleTest } from "./agentTest.js";
+import { runSherbTest } from "./agentTest.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
@@ -63,7 +63,7 @@ app.whenReady().then(async () => {
   // Layer 5 smoke test — remove after Layer 6 is built
   if (process.env.NOOK_LAYER4_TEST === "1") {
     const wins = BrowserWindow.getAllWindows();
-    if (wins[0]) await runMapleTest(wins[0]);
+    if (wins[0]) await runSherbTest(wins[0]);
   }
 
   app.on("activate", () => {
