@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const path_1 = __importDefault(require("path"));
+const handlers_1 = require("./ipc/handlers");
 // Fix PATH for macOS — ensures CLI tools (node, claude) are accessible from main process
 // Must be set before createWindow()
 if (process.platform === "darwin") {
@@ -41,6 +42,7 @@ function createWindow() {
     else {
         win.loadFile(path_1.default.join(__dirname, "../dist/index.html"));
     }
+    (0, handlers_1.registerHandlers)(win);
     // Open external links in the system browser, not Electron
     win.webContents.setWindowOpenHandler(({ url }) => {
         electron_1.shell.openExternal(url);

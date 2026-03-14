@@ -1,5 +1,6 @@
 import { app, BrowserWindow, shell } from "electron";
 import path from "path";
+import { registerHandlers } from "./ipc/handlers";
 
 // Fix PATH for macOS — ensures CLI tools (node, claude) are accessible from main process
 // Must be set before createWindow()
@@ -39,6 +40,8 @@ function createWindow(): void {
   } else {
     win.loadFile(path.join(__dirname, "../dist/index.html"));
   }
+
+  registerHandlers(win);
 
   // Open external links in the system browser, not Electron
   win.webContents.setWindowOpenHandler(({ url }) => {
