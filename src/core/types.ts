@@ -6,7 +6,7 @@
 
 export type IslandEvent =
   | { type: "task_received";   taskId: string; description: string; timestamp: string }
-  | { type: "plan_proposed";   taskId: string; agentId: string; plan: unknown[] }
+  | { type: "plan_proposed";   taskId: string; agentId: string; plan: { task: string; steps: { villager: string; action: string }[] } }
   | { type: "plan_approved";   taskId: string; plan: unknown[] }
   | { type: "agent_activated"; taskId: string; agentId: string }
   | { type: "thought";         taskId: string; agentId: string; text: string }

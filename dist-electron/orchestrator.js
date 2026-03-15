@@ -1,5 +1,5 @@
 /**
- * Layer 9 — Full MVP villager chain orchestrator.
+ * Layer 11 — Full MVP villager chain orchestrator with UI event emissions.
  * Step 1: plan-only query() (no tools, maxTurns: 1) → JSON plan
  * Step 2: exec query() with Maple + Zucker + Marshal in agents roster
  *
@@ -128,20 +128,22 @@ function parsePlan(raw) {
  * @param description      The raw task description from the player.
  * @param onPlanProposed   Callback — receives the proposed plan, returns true
  *                         to approve or false to reject. In the Layer 9 smoke
- *                         test this auto-approves; Layer 11 will wait for
+ *                         test this auto-approves; Layer 11 waits for
  *                         PLAN_APPROVE IPC from the renderer.
  */
 export async function runTwoStepSherb(win, description, onPlanProposed) {
     const taskId = generateTaskId();
     const paths = getTaskPaths(taskId);
     await initBottleFile(taskId, description);
-    await appendTaskEvent(taskId, {
+    const taskReceivedEvent = {
         type: "task_received",
         taskId,
         description,
         timestamp: new Date().toISOString(),
-    });
-    console.log("[sherb] ── Layer 9: full villager chain ──");
+    };
+    await appendTaskEvent(taskId, taskReceivedEvent);
+    win.webContents.send(CHANNELS.ISLAND_EVENT, taskReceivedEvent);
+    console.log("[sherb] ── Layer 11: full villager chain ──");
     console.log("[sherb] taskId:", taskId);
     console.log("[sherb] bottle:", paths.bottle);
     // ── STEP 1: Plan-only call ─────────────────────────────────────────────────
@@ -158,7 +160,6 @@ export async function runTwoStepSherb(win, description, onPlanProposed) {
         },
     })) {
         console.log("[sherb:plan]", JSON.stringify(message, null, 2));
-        win.webContents.send(CHANNELS.ISLAND_EVENT, message);
         if (typeof message === "object" &&
             message !== null &&
             "type" in message &&
@@ -171,18 +172,22 @@ export async function runTwoStepSherb(win, description, onPlanProposed) {
     }
     if (!plan) {
         console.error("[sherb] plan call returned no parseable JSON — aborting");
-        await appendTaskEvent(taskId, {
+        const errEvent = {
             type: "agent_error",
             taskId,
             agentId: "sherb",
             error: "plan parse failed",
-        });
+        };
+        await appendTaskEvent(taskId, errEvent);
+        win.webContents.send(CHANNELS.ISLAND_EVENT, errEvent);
         return;
     }
     console.log("[sherb] plan:", JSON.stringify(plan, null, 2));
-    // Emit plan_proposed event — renderer picks this up in Layer 11
+    // Emit plan_proposed to both ISLAND_EVENT (typed, for workflow panel)
+    // and PLAN_PROPOSED (raw plan, for approval gate in bridge)
     const planEvent = { type: "plan_proposed", taskId, agentId: "sherb", plan };
     await appendTaskEvent(taskId, planEvent);
+    win.webContents.send(CHANNELS.ISLAND_EVENT, planEvent);
     win.webContents.send(CHANNELS.PLAN_PROPOSED, plan);
     // ── STEP 2: Player approval ────────────────────────────────────────────────
     const approved = await onPlanProposed(plan);
@@ -191,7 +196,9 @@ export async function runTwoStepSherb(win, description, onPlanProposed) {
         await appendTaskEvent(taskId, { type: "task_cancelled", taskId });
         return;
     }
-    await appendTaskEvent(taskId, { type: "plan_approved", taskId, plan });
+    const planApprovedEvent = { type: "plan_approved", taskId, plan };
+    await appendTaskEvent(taskId, planApprovedEvent);
+    win.webContents.send(CHANNELS.ISLAND_EVENT, planApprovedEvent);
     console.log("[sherb] plan approved — step 2: exec call");
     // ── STEP 3: Exec call ──────────────────────────────────────────────────────
     const execPrompt = `Execute this approved plan:
@@ -202,6 +209,8 @@ Notes file:  ${paths.notes}
 
 Use the Agent tool to summon each villager in the order listed in the plan.
 Pass them the bottle and notes file paths so they know where to write their output.`;
+    // Track which agent is currently active (for PreToolUse hook agentId)
+    let currentAgent = "sherb";
     for await (const message of query({
         prompt: execPrompt,
         options: {
@@ -232,21 +241,59 @@ Pass them the bottle and notes file paths so they know where to write their outp
             maxBudgetUsd: 1.0,
             cwd: app.getAppPath(),
             settingSources: ["project"],
+            hooks: {
+                SubagentStart: [{
+                        hooks: [async (input) => {
+                                const { agent_type } = input;
+                                currentAgent = agent_type;
+                                const event = { type: "agent_activated", taskId, agentId: agent_type };
+                                await appendTaskEvent(taskId, event);
+                                win.webContents.send(CHANNELS.ISLAND_EVENT, event);
+                                return { continue: true };
+                            }],
+                    }],
+                SubagentStop: [{
+                        hooks: [async (input) => {
+                                const { agent_type } = input;
+                                const event = { type: "handoff", taskId, fromAgent: agent_type, toAgent: "" };
+                                win.webContents.send(CHANNELS.ISLAND_EVENT, event);
+                                currentAgent = "sherb";
+                                return { continue: true };
+                            }],
+                    }],
+                PreToolUse: [{
+                        hooks: [async (input) => {
+                                const { tool_name, tool_input } = input;
+                                const realTools = ["WebSearch"];
+                                const event = {
+                                    type: "tool_call",
+                                    taskId,
+                                    agentId: currentAgent,
+                                    tool: tool_name,
+                                    args: tool_input,
+                                    real: realTools.includes(tool_name),
+                                };
+                                win.webContents.send(CHANNELS.ISLAND_EVENT, event);
+                                return { continue: true };
+                            }],
+                    }],
+            },
         },
     })) {
         console.log("[sherb:exec]", JSON.stringify(message, null, 2));
-        win.webContents.send(CHANNELS.ISLAND_EVENT, message);
         if (typeof message === "object" &&
             message !== null &&
             "type" in message) {
             const msg = message;
             if (msg.type === "result" && !msg.is_error) {
-                await appendTaskEvent(taskId, {
+                const completeEvent = {
                     type: "task_complete",
                     taskId,
                     outputPath: paths.bottle,
                     cost_usd: msg.total_cost_usd ?? 0,
-                });
+                };
+                await appendTaskEvent(taskId, completeEvent);
+                win.webContents.send(CHANNELS.ISLAND_EVENT, completeEvent);
                 // Open the bottle in the default markdown editor — the mailbox delivery moment
                 await shell.openPath(paths.bottle);
             }

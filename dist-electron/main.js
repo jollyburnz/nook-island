@@ -51,7 +51,7 @@ function createWindow() {
 app.whenReady().then(async () => {
     await initDataDir();
     createWindow();
-    // Layer 5 smoke test — remove after Layer 6 is built
+    // Layer 9 smoke test — auto-approves plan, exercises full Maple→Zucker→Marshal chain
     if (process.env.NOOK_LAYER4_TEST === "1") {
         const wins = BrowserWindow.getAllWindows();
         if (wins[0])
