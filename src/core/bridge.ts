@@ -7,6 +7,7 @@ let initialized = false;
 
 export function initBridge(): void {
   if (initialized) return;
+  if (!window.nookIsland) return; // no-op outside Electron
   initialized = true;
 
   window.nookIsland.onEvent((e)        => eventBus.emit(e));
@@ -16,6 +17,7 @@ export function initBridge(): void {
 }
 
 export function destroyBridge(): void {
+  if (!window.nookIsland) return; // no-op outside Electron
   window.nookIsland.removeAllListeners();
   initialized = false;
 }
