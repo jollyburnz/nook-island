@@ -1,0 +1,37 @@
+src/components/WorkflowPanel.tsx
+  99ec817f569d8509 1-148
+src/App.tsx
+  99ec817f569d8509 1,4-7,9-11,14-18,21-43,45,52-58,71-93,95-108,110-116,119-121,123-130,132-138,141-142,144
+electron/ipc/handlers.ts
+  99ec817f569d8509 4,6,9-14,18-20,24-26,30-32,38,44
+src/core/types.ts
+  99ec817f569d8509 9
+electron/main.ts
+  99ec817f569d8509 63
+src/components/PlanApproval.tsx
+  99ec817f569d8509 1-102
+src/components/TownHall.tsx
+  99ec817f569d8509 1-62
+electron/orchestrator.ts
+  99ec817f569d8509 2,13,150,162-164,168-170,172,213-214,218-220,226-228,230,237,241-243,256-258,292-328,344-345,349-351
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "b54468cd26d3ce3a0fda8d3b5a48802ec470a3ad",
+  "prompts": {
+    "99ec817f569d8509": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04589c7a-9393-4ec6-b1ec-0b28dff6f0ca",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "jollyburnz <j@cksonl.in>",
+      "messages": [],
+      "total_additions": 522,
+      "total_deletions": 48,
+      "accepted_lines": 512,
+      "overriden_lines": 0
+    }
+  }
+}
