@@ -1,0 +1,264 @@
+<h2>Layout C — Full Canvas + Floating Panels</h2>
+<p class="subtitle">Full-scale mockup at 1280×800 proportions. Canvas fills window, UI floats on top.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Nook Island — 1280×800 window (scaled to fit)</div>
+  <div class="mockup-body" style="padding:0;overflow:hidden;background:#87ceeb">
+    <svg width="100%" viewBox="0 0 1280 800" style="display:block;max-height:600px" preserveAspectRatio="xMidYMid meet">
+
+      <!-- ══ CANVAS WORLD ══ -->
+
+      <!-- Sky gradient zones -->
+      <rect width="1280" height="800" fill="#87ceeb"/>
+      <!-- Clouds -->
+      <ellipse cx="180" cy="80" rx="60" ry="22" fill="white" opacity="0.7"/>
+      <ellipse cx="220" cy="70" rx="45" ry="18" fill="white" opacity="0.7"/>
+      <ellipse cx="150" cy="75" rx="35" ry="14" fill="white" opacity="0.7"/>
+      <ellipse cx="600" cy="55" rx="70" ry="20" fill="white" opacity="0.6"/>
+      <ellipse cx="650" cy="48" rx="50" ry="16" fill="white" opacity="0.6"/>
+      <ellipse cx="1050" cy="90" rx="55" ry="18" fill="white" opacity="0.5"/>
+      <ellipse cx="1095" cy="82" rx="40" ry="14" fill="white" opacity="0.5"/>
+
+      <!-- Back hills / elevation -->
+      <ellipse cx="200" cy="420" rx="220" ry="120" fill="#6ab84e"/>
+      <ellipse cx="640" cy="390" rx="280" ry="100" fill="#6ab84e"/>
+      <ellipse cx="1100" cy="430" rx="200" ry="110" fill="#6ab84e"/>
+
+      <!-- Main grass field -->
+      <rect y="480" width="1280" height="160" fill="#7ec860"/>
+
+      <!-- Sand beach strip -->
+      <rect y="622" width="1280" height="72" fill="#f0dfa8"/>
+
+      <!-- Shallow water fringe -->
+      <rect y="686" width="1280" height="30" fill="#72c4e8" opacity="0.6"/>
+
+      <!-- Deep water -->
+      <rect y="710" width="1280" height="90" fill="#4a90d9"/>
+
+      <!-- Wave lines -->
+      <path d="M0,716 Q80,710 160,716 Q240,722 320,716 Q400,710 480,716 Q560,722 640,716 Q720,710 800,716 Q880,722 960,716 Q1040,710 1120,716 Q1200,722 1280,716" fill="none" stroke="white" stroke-width="2.5" opacity="0.5"/>
+      <path d="M0,734 Q80,728 160,734 Q240,740 320,734 Q400,728 480,734 Q560,740 640,734 Q720,728 800,734 Q880,740 960,734 Q1040,728 1120,734 Q1200,740 1280,734" fill="none" stroke="white" stroke-width="1.5" opacity="0.3"/>
+
+      <!-- ══ TREES / NATURE ══ -->
+      <!-- Left forest cluster (near Maple) -->
+      <rect x="255" y="342" width="18" height="70" fill="#6b4423"/>
+      <circle cx="264" cy="330" r="46" fill="#3d8a3d"/>
+      <circle cx="244" cy="345" r="32" fill="#4a9e4a"/>
+      <circle cx="285" cy="348" r="28" fill="#4a9e4a"/>
+
+      <rect x="190" y="370" width="14" height="58" fill="#6b4423"/>
+      <circle cx="197" cy="360" r="36" fill="#4a9e4a"/>
+
+      <rect x="330" y="358" width="14" height="55" fill="#6b4423"/>
+      <circle cx="337" cy="348" r="32" fill="#3d8a3d"/>
+
+      <!-- Right background trees -->
+      <rect x="920" y="360" width="14" height="55" fill="#6b4423"/>
+      <circle cx="927" cy="350" r="34" fill="#4a9e4a"/>
+      <rect x="960" y="375" width="12" height="46" fill="#6b4423"/>
+      <circle cx="966" cy="366" r="28" fill="#3d8a3d"/>
+
+      <!-- Path stones (decorative) -->
+      <ellipse cx="550" cy="620" rx="12" ry="6" fill="#d4c4a0" opacity="0.6"/>
+      <ellipse cx="600" cy="618" rx="10" ry="5" fill="#d4c4a0" opacity="0.5"/>
+      <ellipse cx="650" cy="621" rx="11" ry="5" fill="#d4c4a0" opacity="0.6"/>
+      <ellipse cx="700" cy="619" rx="9" ry="4" fill="#d4c4a0" opacity="0.5"/>
+
+      <!-- ══ BOTTLE PATH (amber dashed) ══ -->
+      <path d="M120,656 L280,656 L520,656 L800,656 L1020,656 L1160,656"
+            fill="none" stroke="#f0a500" stroke-width="3" stroke-dasharray="12,7" opacity="0.85"/>
+      <!-- Waypoint dots -->
+      <circle cx="120" cy="656" r="6" fill="#f0a500" opacity="0.9"/>
+      <circle cx="280" cy="656" r="6" fill="#f0a500" opacity="0.9"/>
+      <circle cx="520" cy="656" r="6" fill="#f0a500" opacity="0.9"/>
+      <circle cx="800" cy="656" r="6" fill="#f0a500" opacity="0.9"/>
+      <circle cx="1020" cy="656" r="6" fill="#f0a500" opacity="0.9"/>
+      <circle cx="1160" cy="656" r="6" fill="#f0a500" opacity="0.9"/>
+
+      <!-- ══ TOWN HALL (Sherb) ══ -->
+      <!-- Building -->
+      <rect x="52" y="462" width="120" height="90" fill="#d4c5e8" rx="6"/>
+      <polygon points="52,462 112,418 172,462" fill="#b8a0d8"/>
+      <!-- Windows -->
+      <rect x="72" y="490" width="26" height="28" fill="#a8d5e8" rx="3"/>
+      <rect x="110" y="490" width="26" height="28" fill="#a8d5e8" rx="3"/>
+      <!-- Door -->
+      <rect x="92" y="522" width="28" height="30" fill="#8b6340" rx="3 3 0 0"/>
+      <circle cx="118" cy="537" r="2" fill="#f0c060"/>
+      <!-- Steps -->
+      <rect x="82" y="550" width="48" height="6" fill="#c4b0e0" rx="1"/>
+      <rect x="76" y="555" width="60" height="5" fill="#b8a0d0" rx="1"/>
+      <!-- Sign -->
+      <rect x="84" y="472" width="56" height="16" fill="#fff8e8" rx="2"/>
+      <text x="112" y="483" text-anchor="middle" font-size="11" fill="#4a3060" font-weight="bold">Town Hall</text>
+      <!-- Sherb sprite (32×48 at beach) -->
+      <rect x="96" y="612" width="32" height="38" fill="#c3b1e1" rx="4"/>
+      <circle cx="112" cy="608" r="16" fill="#c3b1e1"/>
+      <circle cx="103" cy="600" r="7" fill="#c3b1e1"/>
+      <circle cx="121" cy="600" r="7" fill="#c3b1e1"/>
+      <ellipse cx="112" cy="614" rx="10" ry="6" fill="#d4c8ee"/>
+      <!-- Eyes -->
+      <circle cx="107" cy="607" r="2.5" fill="#2d1a4a"/>
+      <circle cx="117" cy="607" r="2.5" fill="#2d1a4a"/>
+      <!-- Sherb label -->
+      <text x="112" y="660" text-anchor="middle" font-size="13" fill="#4a3060" font-weight="bold">🐐 Sherb</text>
+
+      <!-- ══ MAPLE (Forest edge) ══ -->
+      <!-- Maple sprite -->
+      <rect x="264" y="612" width="32" height="38" fill="#e8a87c" rx="4"/>
+      <circle cx="280" cy="608" r="16" fill="#e8a87c"/>
+      <circle cx="271" cy="599" r="7" fill="#e8a87c"/>
+      <circle cx="289" cy="599" r="7" fill="#e8a87c"/>
+      <ellipse cx="280" cy="614" rx="10" ry="6" fill="#f0c090"/>
+      <circle cx="275" cy="607" r="2.5" fill="#2d1a4a"/>
+      <circle cx="285" cy="607" r="2.5" fill="#2d1a4a"/>
+      <!-- little dot nose -->
+      <circle cx="280" cy="612" r="1.5" fill="#c4845c"/>
+      <text x="280" y="660" text-anchor="middle" font-size="13" fill="#8b5030" font-weight="bold">🐻 Maple</text>
+
+      <!-- ══ ZUCKER (Library dock) ══ -->
+      <!-- Library building -->
+      <rect x="454" y="468" width="130" height="84" fill="#5ba4a4" rx="6"/>
+      <polygon points="454,468 519,428 584,468" fill="#4a8a8a"/>
+      <rect x="490" y="492" width="28" height="28" fill="#a8d5e8" rx="3"/>
+      <rect x="530" y="492" width="28" height="28" fill="#a8d5e8" rx="3"/>
+      <rect x="504" y="524" width="30" height="28" fill="#8b6340" rx="3 3 0 0"/>
+      <rect x="444" y="550" width="150" height="6" fill="#4a8a8a" rx="1"/>
+      <rect x="84" y="474" width="56" height="16" fill="#fff8e8" rx="2"/>
+      <!-- Dock -->
+      <rect x="470" y="555" width="118" height="16" fill="#8b6340" rx="3"/>
+      <rect x="476" y="570" width="16" height="32" fill="#7a5530"/>
+      <rect x="508" y="570" width="16" height="32" fill="#7a5530"/>
+      <rect x="540" y="570" width="16" height="32" fill="#7a5530"/>
+      <!-- Sign -->
+      <rect x="470" y="474" width="70" height="16" fill="#fff8e8" rx="2"/>
+      <text x="505" y="485" text-anchor="middle" font-size="11" fill="#2d5a5a" font-weight="bold">Library</text>
+      <!-- Zucker sprite -->
+      <rect x="504" y="612" width="32" height="38" fill="#5ba4a4" rx="4"/>
+      <circle cx="520" cy="608" r="16" fill="#5ba4a4"/>
+      <!-- Octopus tentacles hint -->
+      <circle cx="510" cy="598" r="7" fill="#5ba4a4"/>
+      <circle cx="530" cy="598" r="7" fill="#5ba4a4"/>
+      <circle cx="505" cy="606" r="5" fill="#4a8a8a"/>
+      <circle cx="535" cy="606" r="5" fill="#4a8a8a"/>
+      <ellipse cx="520" cy="614" rx="10" ry="6" fill="#7abcbc"/>
+      <circle cx="515" cy="607" r="2.5" fill="#2d1a4a"/>
+      <circle cx="525" cy="607" r="2.5" fill="#2d1a4a"/>
+      <text x="520" y="660" text-anchor="middle" font-size="13" fill="#2d5a5a" font-weight="bold">🐙 Zucker</text>
+
+      <!-- ══ MARSHAL (Coffee shop) ══ -->
+      <!-- Coffee shop -->
+      <rect x="736" y="470" width="128" height="82" fill="#9ba7b0" rx="6"/>
+      <polygon points="736,470 800,432 864,470" fill="#8a9599"/>
+      <rect x="760" y="494" width="28" height="26" fill="#a8d5e8" rx="3"/>
+      <rect x="812" y="494" width="28" height="26" fill="#a8d5e8" rx="3"/>
+      <rect x="780" y="522" width="30" height="30" fill="#8b6340" rx="3 3 0 0"/>
+      <rect x="726" y="550" width="148" height="6" fill="#8a9599" rx="1"/>
+      <rect x="754" y="476" width="92" height="16" fill="#fff8e8" rx="2"/>
+      <text x="800" y="487" text-anchor="middle" font-size="11" fill="#4a5560" font-weight="bold">Coffee Shop</text>
+      <!-- Awning -->
+      <path d="M736,490 Q800,478 864,490" fill="#c0392b" opacity="0.7"/>
+      <!-- Marshal sprite -->
+      <rect x="784" y="612" width="32" height="38" fill="#9ba7b0" rx="4"/>
+      <circle cx="800" cy="608" r="16" fill="#9ba7b0"/>
+      <!-- Squirrel ears (pointy) -->
+      <polygon points="792,598 788,586 797,594" fill="#9ba7b0"/>
+      <polygon points="808,598 812,586 803,594" fill="#9ba7b0"/>
+      <ellipse cx="800" cy="614" rx="10" ry="6" fill="#b0bcc4"/>
+      <circle cx="795" cy="607" r="2.5" fill="#2d1a4a"/>
+      <circle cx="805" cy="607" r="2.5" fill="#2d1a4a"/>
+      <!-- smug mouth -->
+      <path d="M797,613 Q800,616 803,613" fill="none" stroke="#2d1a4a" stroke-width="1.5"/>
+      <text x="800" y="660" text-anchor="middle" font-size="13" fill="#4a5560" font-weight="bold">🐿️ Marshal</text>
+
+      <!-- ══ MAILBOX ══ -->
+      <!-- Post -->
+      <rect x="1147" y="570" width="8" height="80" fill="#7f8c8d" rx="2"/>
+      <!-- Box -->
+      <rect x="1125" y="542" width="52" height="36" fill="#c0392b" rx="4"/>
+      <rect x="1121" y="536" width="60" height="10" fill="#e74c3c" rx="3"/>
+      <!-- Slot -->
+      <rect x="1133" y="556" width="36" height="4" fill="#8b1a0e" rx="1"/>
+      <!-- Flag (up = has mail) -->
+      <rect x="1175" y="538" width="4" height="28" fill="#7f8c8d" rx="1"/>
+      <rect x="1179" y="538" width="20" height="14" fill="#e74c3c" rx="2"/>
+      <!-- Mailbox label -->
+      <text x="1151" y="664" text-anchor="middle" font-size="13" fill="#c0392b" font-weight="bold">📬 Mailbox</text>
+
+      <!-- ══ BOTTLE (mid-travel, between Maple and Zucker) ══ -->
+      <rect x="392" y="640" width="20" height="30" fill="#aae4ff" rx="5"/>
+      <rect x="395" y="632" width="14" height="10" fill="#c3b1e1" rx="4"/>
+      <!-- wax seal glow -->
+      <circle cx="402" cy="637" r="6" fill="#c3b1e1" opacity="0.5"/>
+      <!-- bottle shine -->
+      <rect x="395" y="644" width="4" height="12" fill="white" opacity="0.4" rx="2"/>
+      <!-- small shadow -->
+      <ellipse cx="402" cy="672" rx="12" ry="4" fill="#000" opacity="0.12"/>
+
+      <!-- ══ FLOATING PANEL — Task Input (top left, idle state) ══ -->
+      <rect x="32" y="28" width="420" height="90" fill="rgba(240,247,244,0.92)" rx="12"/>
+      <rect x="32" y="28" width="420" height="90" fill="none" stroke="#a8d5be" stroke-width="2" rx="12"/>
+      <!-- Input field -->
+      <rect x="48" y="50" width="296" height="36" fill="white" rx="6"/>
+      <text x="64" y="73" font-size="13" fill="#aaa">What should the villagers work on?</text>
+      <!-- Submit button -->
+      <rect x="352" y="50" width="84" height="36" fill="#2d5a3d" rx="6"/>
+      <text x="394" y="73" text-anchor="middle" font-size="13" fill="white" font-weight="bold">✉️ Drop</text>
+      <!-- Shortcut hint -->
+      <text x="48" y="106" font-size="11" fill="#2d5a3d" opacity="0.6">⌘↵ to submit</text>
+
+      <!-- ══ FLOATING PANEL — Workflow (top right, executing state) ══ -->
+      <rect x="900" y="28" width="348" height="230" fill="rgba(240,247,244,0.92)" rx="12"/>
+      <rect x="900" y="28" width="348" height="230" fill="none" stroke="#a8d5be" stroke-width="2" rx="12"/>
+      <!-- Header -->
+      <text x="916" y="56" font-size="13" fill="#2d5a3d" font-weight="bold">Live Workflow</text>
+      <!-- Maple card (active) -->
+      <rect x="916" y="64" width="316" height="56" fill="#e8f5ef" rx="8"/>
+      <rect x="916" y="64" width="316" height="56" fill="none" stroke="#4caf82" stroke-width="1.5" rx="8"/>
+      <text x="932" y="84" font-size="13" fill="#2d5a3d" font-weight="bold">🐻 maple</text>
+      <text x="1198" y="84" text-anchor="end" font-size="11" fill="#4caf82">⟳ working</text>
+      <text x="932" y="100" font-size="11" fill="#555">⚡ WebSearch — "animal crossing history"</text>
+      <text x="932" y="114" font-size="11" fill="#888">· Write → notes.md</text>
+      <!-- Zucker card (waiting) -->
+      <rect x="916" y="128" width="316" height="36" fill="#f0f7f4" rx="8"/>
+      <rect x="916" y="128" width="316" height="36" fill="none" stroke="#a8d5be" stroke-width="1" rx="8"/>
+      <text x="932" y="151" font-size="13" fill="#2d5a3d" opacity="0.6">🐙 zucker</text>
+      <text x="1198" y="151" text-anchor="end" font-size="11" fill="#aaa">waiting</text>
+      <!-- Marshal card (waiting) -->
+      <rect x="916" y="172" width="316" height="36" fill="#f0f7f4" rx="8"/>
+      <rect x="916" y="172" width="316" height="36" fill="none" stroke="#a8d5be" stroke-width="1" rx="8"/>
+      <text x="932" y="195" font-size="13" fill="#2d5a3d" opacity="0.6">🐿️ marshal</text>
+      <text x="1198" y="195" text-anchor="end" font-size="11" fill="#aaa">waiting</text>
+      <!-- Cost placeholder -->
+      <text x="916" y="244" font-size="11" fill="#2d5a3d" opacity="0.5">Cost will appear here on completion</text>
+
+    </svg>
+  </div>
+</div>
+
+<div class="section" style="margin-top:20px">
+  <h3>What this means in code</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:13px">
+    <div>
+      <p class="label">Canvas layer (PixiJS)</p>
+      <ul style="margin:8px 0 0;padding-left:18px;line-height:1.8">
+        <li>Full-window PixiJS canvas behind everything</li>
+        <li>32×32 tile terrain (grass, sand, water)</li>
+        <li>32×48 villager sprites with idle animation</li>
+        <li>Bottle sprite traveling along waypoints</li>
+        <li>Clouds drifting slowly (parallax)</li>
+      </ul>
+    </div>
+    <div>
+      <p class="label">React HUD layer (absolute, pointer-events)</p>
+      <ul style="margin:8px 0 0;padding-left:18px;line-height:1.8">
+        <li>Task input card — top left, always visible</li>
+        <li>Workflow panel — top right, shows during task</li>
+        <li>Plan approval card — centered overlay</li>
+        <li>Glass morphism style (rgba bg + border)</li>
+        <li>Positioned with CSS absolute over the canvas</li>
+      </ul>
+    </div>
+  </div>
+</div>

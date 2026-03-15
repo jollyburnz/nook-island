@@ -42,6 +42,14 @@ function createWindow() {
         win.loadFile(path.join(__dirname, "../dist/index.html"));
     }
     registerHandlers(win);
+    // Forward renderer console messages → main process stdout so we can read them in the terminal
+    const LEVEL = ["verbose", "info", "warning", "error"];
+    win.webContents.on("console-message", (_e, level, message, line, sourceId) => {
+        const tag = LEVEL[level] ?? "log";
+        if (tag === "error" || tag === "warning") {
+            process.stdout.write(`[renderer:${tag}] ${message}  (${sourceId}:${line})\n`);
+        }
+    });
     // Open external links in the system browser, not Electron
     win.webContents.setWindowOpenHandler(({ url }) => {
         shell.openExternal(url);

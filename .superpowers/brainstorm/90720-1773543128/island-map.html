@@ -1,0 +1,199 @@
+<h2>Island Map Layout — Where does each area live?</h2>
+<p class="subtitle">World is ~160×100 tiles (5120×3200px). Camera pans to whoever is active. Pick the geography.</p>
+
+<div class="cards">
+
+  <!-- Option A: Linear coast -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#4a90d9;padding:16px;min-height:220px;display:flex;align-items:center;justify-content:center">
+      <svg width="280" height="180" viewBox="0 0 280 180">
+        <!-- Ocean -->
+        <rect width="280" height="180" fill="#4a90d9"/>
+        <!-- Island shape - horizontal strip -->
+        <ellipse cx="140" cy="110" rx="128" ry="58" fill="#7ec860"/>
+        <!-- Beach rim -->
+        <ellipse cx="140" cy="120" rx="128" ry="45" fill="#f0dfa8"/>
+        <!-- Grass interior -->
+        <ellipse cx="140" cy="105" rx="110" ry="42" fill="#7ec860"/>
+
+        <!-- Wave lines -->
+        <path d="M12,158 Q35,154 58,158 Q80,162 104,158" fill="none" stroke="white" stroke-width="1" opacity="0.5"/>
+        <path d="M176,158 Q200,154 224,158 Q248,162 272,158" fill="none" stroke="white" stroke-width="1" opacity="0.5"/>
+
+        <!-- Path along coast (bottle route) -->
+        <path d="M28,128 L76,128 L140,128 L204,128 L252,128" fill="none" stroke="#f0a500" stroke-width="2.5" stroke-dasharray="8,5" opacity="0.9"/>
+
+        <!-- Area 1: Town Hall (far left) -->
+        <rect x="16" y="98" width="28" height="22" fill="#d4c5e8" rx="3"/>
+        <text x="30" y="112" text-anchor="middle" font-size="8" fill="#4a3060" font-weight="bold">Hall</text>
+        <circle cx="30" cy="126" r="5" fill="#c3b1e1"/>
+        <text x="30" y="146" text-anchor="middle" font-size="8" fill="#4a3060">🐐 Sherb</text>
+
+        <!-- Area 2: Forest (left-center) -->
+        <circle cx="76" cy="93" r="14" fill="#3d8a3d"/>
+        <circle cx="60" cy="100" r="10" fill="#4a9e4a"/>
+        <circle cx="90" cy="98" r="10" fill="#4a9e4a"/>
+        <circle cx="76" cy="126" r="5" fill="#e8a87c"/>
+        <text x="76" y="146" text-anchor="middle" font-size="8" fill="#5a3010">🐻 Maple</text>
+
+        <!-- Area 3: Library dock (center) -->
+        <rect x="118" y="98" width="44" height="22" fill="#5ba4a4" rx="3"/>
+        <text x="140" y="112" text-anchor="middle" font-size="8" fill="white" font-weight="bold">Library</text>
+        <rect x="126" y="118" width="28" height="8" fill="#8b6340" rx="1"/><!-- dock -->
+        <circle cx="140" cy="126" r="5" fill="#5ba4a4"/>
+        <text x="140" y="146" text-anchor="middle" font-size="8" fill="#2d5a5a">🐙 Zucker</text>
+
+        <!-- Area 4: Coffee (right-center) -->
+        <rect x="182" y="100" width="42" height="20" fill="#9ba7b0" rx="3"/>
+        <text x="203" y="113" text-anchor="middle" font-size="8" fill="white" font-weight="bold">Café</text>
+        <circle cx="203" cy="126" r="5" fill="#9ba7b0"/>
+        <text x="203" y="146" text-anchor="middle" font-size="8" fill="#4a5560">🐿️ Marshal</text>
+
+        <!-- Mailbox (far right) -->
+        <rect x="243" y="116" width="14" height="10" fill="#c0392b" rx="2"/>
+        <rect x="249" y="108" width="2" height="10" fill="#7f8c8d"/>
+        <rect x="251" y="106" width="7" height="5" fill="#e74c3c"/>
+        <text x="250" y="146" text-anchor="middle" font-size="8" fill="#c0392b">📬</text>
+
+        <!-- Camera viewport indicator -->
+        <rect x="118" y="82" width="88" height="68" fill="none" stroke="white" stroke-width="2" stroke-dasharray="4,3" rx="4" opacity="0.7"/>
+        <text x="162" y="168" text-anchor="middle" font-size="8" fill="white" opacity="0.8">← camera pans left→right →</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>A — Linear Coastline</h3>
+      <p>All 4 areas arranged left→right along a single beach. Camera slides horizontally as bottle travels. Simple, predictable, fast to pan. Bottle route is a straight horizontal path.</p>
+      <p style="font-size:12px;opacity:0.7;margin-top:6px">Widest map. Pan direction always matches task direction (left = start, right = done).</p>
+    </div>
+  </div>
+
+  <!-- Option B: Organic round island -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#4a90d9;padding:16px;min-height:220px;display:flex;align-items:center;justify-content:center">
+      <svg width="240" height="200" viewBox="0 0 240 200">
+        <!-- Ocean -->
+        <rect width="240" height="200" fill="#4a90d9"/>
+        <!-- Island blob (organic) -->
+        <path d="M120,20 C170,18 210,50 220,90 C232,135 210,168 170,178 C140,186 100,182 72,170 C38,154 18,120 22,82 C26,44 70,22 120,20 Z" fill="#7ec860"/>
+        <!-- Beach rim -->
+        <path d="M120,32 C162,30 196,58 206,94 C216,132 196,160 162,170 C138,178 102,174 78,162 C50,148 34,118 38,86 C42,54 78,34 120,32 Z" fill="#f0dfa8"/>
+        <!-- Interior grass -->
+        <path d="M120,44 C154,42 182,66 190,96 C198,128 182,152 154,160 C134,166 106,162 86,150 C62,136 50,110 54,86 C58,62 86,46 120,44 Z" fill="#7ec860"/>
+
+        <!-- Winding path (bottle route) -->
+        <path d="M60,100 C65,80 80,68 100,65 C120,62 138,72 150,90 C162,108 165,128 158,145 C150,162 132,170 114,166" fill="none" stroke="#f0a500" stroke-width="2.5" stroke-dasharray="7,4" opacity="0.9"/>
+
+        <!-- Town Hall - top left area -->
+        <rect x="50" y="75" width="26" height="18" fill="#d4c5e8" rx="2"/>
+        <text x="63" y="86" text-anchor="middle" font-size="7" fill="#4a3060" font-weight="bold">Hall</text>
+        <circle cx="63" cy="99" r="5" fill="#c3b1e1"/>
+        <text x="63" y="114" text-anchor="middle" font-size="7" fill="#4a3060">🐐 Sherb</text>
+
+        <!-- Forest - top right -->
+        <circle cx="148" cy="60" r="12" fill="#3d8a3d"/>
+        <circle cx="134" cy="66" r="8" fill="#4a9e4a"/>
+        <circle cx="160" cy="65" r="8" fill="#4a9e4a"/>
+        <circle cx="148" cy="90" r="5" fill="#e8a87c"/><!-- Maple at forest edge -->
+        <text x="148" y="106" text-anchor="middle" font-size="7" fill="#5a3010">🐻 Maple</text>
+
+        <!-- Library - right side, dock over water -->
+        <rect x="168" y="103" width="32" height="18" fill="#5ba4a4" rx="2"/>
+        <text x="184" y="115" text-anchor="middle" font-size="7" fill="white" font-weight="bold">Lib</text>
+        <rect x="174" y="120" width="22" height="6" fill="#8b6340" rx="1"/>
+        <circle cx="150" cy="127" r="5" fill="#5ba4a4"/><!-- Zucker near dock -->
+        <text x="158" y="143" text-anchor="middle" font-size="7" fill="#2d5a5a">🐙 Zucker</text>
+
+        <!-- Café - bottom area -->
+        <rect x="86" y="152" width="38" height="18" fill="#9ba7b0" rx="2"/>
+        <text x="105" y="164" text-anchor="middle" font-size="7" fill="white" font-weight="bold">Café</text>
+        <circle cx="114" cy="148" r="5" fill="#9ba7b0"/>
+        <text x="110" y="178" text-anchor="middle" font-size="7" fill="#4a5560">🐿️ Marshal</text>
+
+        <!-- Mailbox - near dock -->
+        <rect x="196" y="133" width="10" height="8" fill="#c0392b" rx="1"/>
+        <rect x="200" y="126" width="2" height="8" fill="#7f8c8d"/>
+        <rect x="202" y="124" width="6" height="4" fill="#e74c3c"/>
+
+        <!-- Camera box -->
+        <rect x="88" y="78" width="90" height="72" fill="none" stroke="white" stroke-width="2" stroke-dasharray="4,3" rx="4" opacity="0.7"/>
+        <text x="120" y="192" text-anchor="middle" font-size="7" fill="white" opacity="0.8">camera follows path organically</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>B — Round Island, Winding Path</h3>
+      <p>Classic AC oval island shape. Areas at compass-ish points: Town Hall NW, Forest NE, Library E (dock into sea), Café S. Bottle path winds organically. Camera pans diagonally.</p>
+      <p style="font-size:12px;opacity:0.7;margin-top:6px">Most like real Animal Crossing. Feels like a place, not a conveyor belt. Best exploration potential.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Connected districts -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#4a90d9;padding:16px;min-height:220px;display:flex;align-items:center;justify-content:center">
+      <svg width="260" height="190" viewBox="0 0 260 190">
+        <!-- Ocean -->
+        <rect width="260" height="190" fill="#4a90d9"/>
+
+        <!-- Island chunks connected by bridges/paths -->
+        <!-- Main plaza (center) -->
+        <ellipse cx="130" cy="100" rx="40" ry="35" fill="#7ec860"/>
+        <ellipse cx="130" cy="104" rx="32" ry="26" fill="#f0dfa8"/>
+
+        <!-- NW chunk: Town Hall -->
+        <ellipse cx="52" cy="65" rx="36" ry="28" fill="#7ec860"/>
+        <ellipse cx="52" cy="68" rx="28" ry="20" fill="#d4c5e8" opacity="0.5"/>
+
+        <!-- NE chunk: Forest -->
+        <ellipse cx="208" cy="65" rx="36" ry="28" fill="#3d8a3d"/>
+        <ellipse cx="196" cy="72" rx="22" ry="16" fill="#4a9e4a"/>
+
+        <!-- S chunk: Library dock -->
+        <ellipse cx="80" cy="158" rx="34" ry="24" fill="#7ec860"/>
+        <rect x="66" y="170" width="28" height="8" fill="#8b6340" rx="2"/>
+
+        <!-- SE chunk: Café -->
+        <ellipse cx="195" cy="155" rx="34" ry="24" fill="#7ec860"/>
+        <rect x="182" y="148" width="36" height="18" fill="#9ba7b0" rx="3" opacity="0.8"/>
+
+        <!-- Connecting paths (bridges/stone paths) -->
+        <!-- Main to NW -->
+        <rect x="76" y="80" width="18" height="8" fill="#f0dfa8" rx="2"/>
+        <!-- Main to NE -->
+        <rect x="166" y="80" width="18" height="8" fill="#f0dfa8" rx="2"/>
+        <!-- Main to S-lib -->
+        <rect x="95" y="125" width="8" height="22" fill="#f0dfa8" rx="2"/>
+        <!-- Main to SE-café -->
+        <rect x="162" y="122" width="8" height="22" fill="#f0dfa8" rx="2"/>
+
+        <!-- Bottle path visits center, then branches -->
+        <path d="M52,72 L88,92 L130,100 L175,100 L208,72" fill="none" stroke="#f0a500" stroke-width="2" stroke-dasharray="6,4" opacity="0.7"/>
+        <path d="M130,100 L103,140 L80,155" fill="none" stroke="#f0a500" stroke-width="2" stroke-dasharray="6,4" opacity="0.5"/>
+        <path d="M130,100 L165,130 L195,152" fill="none" stroke="#f0a500" stroke-width="2" stroke-dasharray="6,4" opacity="0.5"/>
+
+        <!-- Villager labels -->
+        <circle cx="52" cy="72" r="5" fill="#c3b1e1"/>
+        <text x="52" y="100" text-anchor="middle" font-size="7" fill="#4a3060">🐐 Sherb</text>
+        <circle cx="208" cy="72" r="5" fill="#e8a87c"/>
+        <text x="208" y="100" text-anchor="middle" font-size="7" fill="#5a3010">🐻 Maple</text>
+        <circle cx="80" cy="158" r="5" fill="#5ba4a4"/>
+        <text x="80" y="178" text-anchor="middle" font-size="7" fill="#2d5a5a">🐙 Zucker</text>
+        <circle cx="195" cy="152" r="5" fill="#9ba7b0"/>
+        <text x="195" y="178" text-anchor="middle" font-size="7" fill="#4a5560">🐿️ Marshal</text>
+
+        <!-- Mailbox on main plaza -->
+        <rect x="138" y="92" width="10" height="8" fill="#c0392b" rx="1"/>
+        <rect x="142" y="84" width="2" height="9" fill="#7f8c8d"/>
+        <text x="143" y="82" text-anchor="middle" font-size="7" fill="#c0392b">📬</text>
+
+        <!-- Camera box -->
+        <rect x="88" y="60" width="85" height="70" fill="none" stroke="white" stroke-width="2" stroke-dasharray="4,3" rx="4" opacity="0.7"/>
+        <text x="130" y="184" text-anchor="middle" font-size="7" fill="white" opacity="0.8">each district = its own island feel</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>C — Connected Districts</h3>
+      <p>4 distinct island chunks connected by stone bridges/paths through a central plaza. Each district has its own biome. Camera jumps between districts as bottle travels. Most modular.</p>
+      <p style="font-size:12px;opacity:0.7;margin-top:6px">Easiest to extend — add new villager = add new island chunk. Very clear visual ownership per villager.</p>
+    </div>
+  </div>
+
+</div>
