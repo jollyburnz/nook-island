@@ -1,0 +1,79 @@
+src/canvas/world/districts/CentralPlaza.ts
+  99ec817f569d8509 1-39
+src/canvas/world/districts/ForestDistrict.ts
+  99ec817f569d8509 1-31
+src/canvas/NookCanvas.tsx
+  99ec817f569d8509 1-114
+src/canvas/hud/IslandHUD.tsx
+  99ec817f569d8509 1-126
+src/canvas/camera/Camera.ts
+  99ec817f569d8509 1-35
+src/canvas/world/World.ts
+  99ec817f569d8509 1-219
+src/canvas/villagers/Zucker.ts
+  99ec817f569d8509 1-28
+src/canvas/world/districts/CafeDistrict.ts
+  99ec817f569d8509 1-33
+src/canvas/objects/Bottle.ts
+  99ec817f569d8509 1-80
+.superpowers/brainstorm/90720-1773543128/waiting.html
+  99ec817f569d8509 1-3
+src/canvas/world/CloudLayer.ts
+  99ec817f569d8509 1-32
+src/canvas/world/districts/TownHallDistrict.ts
+  99ec817f569d8509 1-26
+src/canvas/world/WaterTiles.ts
+  99ec817f569d8509 1-50
+.superpowers/brainstorm/90720-1773543128/art-style.html
+  99ec817f569d8509 1-150
+src/index.html
+  99ec817f569d8509 8
+src/canvas/objects/OffscreenIndicator.ts
+  99ec817f569d8509 1-77
+.superpowers/brainstorm/90720-1773543128/layout-c-detail.html
+  99ec817f569d8509 1-264
+.superpowers/brainstorm/90720-1773543128/island-map.html
+  99ec817f569d8509 1-199
+src/canvas/villagers/Villager.ts
+  99ec817f569d8509 1-60
+src/canvas/villagers/Maple.ts
+  99ec817f569d8509 1-28
+src/canvas/world/districts/District.ts
+  99ec817f569d8509 1-27
+src/canvas/objects/Mailbox.ts
+  99ec817f569d8509 1-87
+.superpowers/brainstorm/90720-1773543128/island-layout.html
+  99ec817f569d8509 1-273
+src/canvas/constants.ts
+  99ec817f569d8509 1-39
+src/canvas/villagers/Marshal.ts
+  99ec817f569d8509 1-30
+src/App.tsx
+  99ec817f569d8509 5-6,8,61,64,67-68,70-73,75-79
+src/canvas/world/districts/LibraryDistrict.ts
+  99ec817f569d8509 1-32
+src/canvas/villagers/Sherb.ts
+  99ec817f569d8509 1-22
+electron/main.ts
+  99ec817f569d8509 51-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "7f4c5564d0111cd29f38789b078d2c4aaebed204",
+  "prompts": {
+    "99ec817f569d8509": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04589c7a-9393-4ec6-b1ec-0b28dff6f0ca",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "jollyburnz <j@cksonl.in>",
+      "messages": [],
+      "total_additions": 2171,
+      "total_deletions": 123,
+      "accepted_lines": 2131,
+      "overriden_lines": 0
+    }
+  }
+}
