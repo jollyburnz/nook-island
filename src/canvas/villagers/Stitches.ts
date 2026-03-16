@@ -1,4 +1,3 @@
-import * as PIXI from "pixi.js";
 import { Villager } from "./Villager.js";
 import { COLORS } from "../constants.js";
 
