@@ -1,0 +1,23 @@
+electron/orchestrator.ts
+  99ec817f569d8509 28,30-65,87,90-103,115,120-121,210-241,396-397,432-437,506
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "f74d5291654816768bf29d62c00a612e96cdeae2",
+  "prompts": {
+    "99ec817f569d8509": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04589c7a-9393-4ec6-b1ec-0b28dff6f0ca",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "jollyburnz <j@cksonl.in>",
+      "messages": [],
+      "total_additions": 98,
+      "total_deletions": 4,
+      "accepted_lines": 562,
+      "overriden_lines": 0
+    }
+  }
+}
