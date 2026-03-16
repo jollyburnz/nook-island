@@ -3,7 +3,7 @@
 > A cozy Animal Crossing-style productivity tool powered by AI agents.
 > Every decision made in the planning phase is recorded here.
 > This is the source of truth — not the chat history.
-> Last updated: Bottle as output — Option C locked in
+> Last updated: 2026-03-16 — Broccolo (data keeper) + Piper (narrator) shipped; all 12 build layers complete
 
 ---
 
@@ -937,7 +937,7 @@ const VILLAGER_TOOLS = {
 | **Marshal** | 🐿️ Squirrel | Critic | Dry wit, secretly most caring | Coffee shop | `#9BA7B0` |
 | **Stitches** | 🧸 Patchwork bear | Ideator | Childlike wonder, unexpected leaps | Art shed | `#F4A7B9` |
 | **Lily** | 🐸 Frog | Listener | Gentle, unhurried, makes everyone feel heard | River bend | `#8DB48E` |
-| **Broccolo** | 🐛 Caterpillar | Tracker | Methodical, loves patterns | Lighthouse | `#F5C842` |
+| **Broccolo** | 🐛 Caterpillar | Tracker | Methodical, loves patterns | Central Plaza (right of mailbox) | `#F5C842` |
 | **Piper** | 🐦 Bird | Narrator | Theatrical, loves a good ending | Café stage | `#F4845F` |
 
 ### Speech Patterns
@@ -1068,20 +1068,33 @@ nook-island/
 
 ## Build Order (Inside-Out, Final)
 
-| Layer | What | Done When |
+All 12 core layers are ✅ COMPLETE. Layer 10 (MCP) explicitly skipped for v1 — deferred to v2.
+
+| Layer | What | Status |
 |---|---|---|
-| 1 | Electron shell | `main.js` creates window, loads Vite dev server. Blank window opens. |
-| 2 | Preload + IPC bridge | `window.nookIsland` exposed. `submitTask()` logs in main process console. |
-| 3 | Data directory init | `~/Library/.../NookIsland/` created. 8 empty journal files on disk. |
-| 4 | Agent SDK single call | Main process runs one `query()`, raw messages stream to console. Maple thinks. |
-| 5 | IPC event forwarding | Main forwards SDK messages to renderer via IPC. DevTools shows events. |
-| 6 | Event bus + message mapper | Typed events flow through `eventBus` in renderer. |
-| 7 | Bottle + file system | Bottle has real file paths. Notes + output `.md` written by SDK. |
-| 8 | Two-step Sherb | Step 1: plan-only call. Step 2: execution with full roster. Player approves between. |
-| 9 | Full villager chain | All 8 agents available. Full task runs. `_final.md` opens in editor. |
-| 10 | MCP verification | Lily reads Gmail. Sherb reads Calendar. Real context in output. |
-| 11 | React UI + workflow panel | Events render as live nodes. ⚡ on real tool calls. Cost shown on completion. |
-| 12 | Canvas world + polish | Tile map, villager sprites, bottle animation, mailbox fill. |
+| 1 | Electron shell | ✅ `main.ts` creates window, loads Vite dev server |
+| 2 | Preload + IPC bridge | ✅ `window.nookIsland` exposed via contextBridge |
+| 3 | Data directory init | ✅ `~/Library/.../NookIsland/` + 8 journal JSON files seeded |
+| 4 | Agent SDK single call | ✅ `query()` smoke test — Maple streams OK |
+| 5 | IPC event forwarding | ✅ SDK messages → `ISLAND_EVENT` → renderer |
+| 6 | Event bus + message mapper | ✅ `src/core/{types,eventBus,bridge}.ts` |
+| 7 | Bottle + file system | ✅ Real `.md` file paths; notes + bottle written by SDK |
+| 8 | Two-step Sherb | ✅ Plan-only call → player approves → exec with subagents |
+| 9 | Full villager chain | ✅ Maple → Zucker → Marshal; revision loop; bottle opens in editor |
+| 10 | MCP verification | ⏭️ SKIPPED — no MCP config on this machine; Gmail/Calendar deferred to v2 |
+| 11 | React UI + workflow panel | ✅ TownHall → PlanApproval → WorkflowPanel; live events; cost badge |
+| 12 | Canvas world + polish | ✅ PixiJS v8: 5 districts, villager sprites, bottle travel, mailbox, water shimmer |
+
+### Post-Launch Additions (v2 sprint)
+
+| Addition | What | Status |
+|---|---|---|
+| Piper (Narrator) | 🐦 Bird sprite at plaza; closes every task with narrative + updates journal | ✅ Shipped |
+| Broccolo (Data Keeper) | 🐛 Caterpillar sprite at plaza; two-layer tracking (see below) | ✅ Shipped |
+
+**Broccolo's two-layer tracking:**
+- **Layer 1 (always-on, no AI):** Orchestrator auto-appends `{ taskId, summary }` to `broccolo.json` after every successful task_complete — runs even when Broccolo wasn't in the plan
+- **Layer 2 (when Sherb invites him):** Broccolo agent reads up to 10 past bottles, appends `### 🐛 Broccolo tracked` pattern analysis to the bottle, updates `userFacts`/`relationships` in his journal (does NOT touch `completedTasks` — Layer 1 already wrote it)
 
 ---
 
@@ -1106,10 +1119,10 @@ Sherb's presence at the returned bottle is non-negotiable — he is the permanen
 
 ### MVP Scope ✅
 
-**v1 — The Core Trio**
+**v1 — The Core Trio (all complete)**
 
 ```
-✅ Sherb (always present)
+✅ Sherb (always present — planner)
 ✅ Maple (Scout) — web search
 ✅ Zucker (Producer) — drafts output
 ✅ Marshal (Critic) — one revision pass allowed
@@ -1120,12 +1133,25 @@ Sherb's presence at the returned bottle is non-negotiable — he is the permanen
 ✅ maxBudgetUsd: $2.00 hard cap
 ✅ All 10 bottle scenarios handled (happy path + failures)
 ✅ Bottle state machine implemented
+```
 
-❌ Gmail / Calendar MCP — v2
-❌ Canvas animations — v2 (workflow panel only in v1)
-❌ Lily, Broccolo, Piper, Stitches — v2
-❌ Memory relationships between villagers — v2
-❌ Parallel villagers — v2
+**v2 — Shipped additions**
+
+```
+✅ Piper (Narrator) — closes every task with in-character narrative; updates her own journal
+✅ Broccolo (Tracker) — canvas sprite at plaza; two-layer data keeper (auto-log + optional pattern analysis)
+✅ PixiJS v8 canvas world — 5 districts, all active villager sprites, bottle travel animation
+```
+
+**Still remaining**
+
+```
+❌ Gmail / Calendar MCP — no MCP config on this machine; deferred indefinitely
+❌ Stitches (Ideator) — not yet implemented
+❌ Lily (Listener) — not yet implemented
+❌ Memory relationships between villagers — no cross-journal reads yet
+❌ Parallel villagers — sequential pipeline only
+❌ Broccolo at lighthouse — moved to plaza; lighthouse district has no villager yet
 ```
 
 Rationale for skipping MCP in v1: adds setup complexity and token overhead before the core pipeline is validated. Get the loop feeling right first.

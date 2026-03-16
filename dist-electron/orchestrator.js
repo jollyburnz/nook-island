@@ -13,6 +13,49 @@ import { query } from "@anthropic-ai/claude-agent-sdk";
 import { app, shell } from "electron";
 import { CHANNELS } from "./ipc/channels.js";
 import { generateTaskId, getTaskPaths, initBottleFile, appendTaskEvent, } from "./tasks.js";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { getDataDir } from "./data.js";
+const JOURNAL_DIR = path.join(getDataDir(), "journals");
+const TASKS_DIR = path.join(getDataDir(), "tasks");
+async function getPastBottles(excludeTaskId, limit) {
+    try {
+        const entries = await fs.readdir(TASKS_DIR);
+        const bottleFiles = entries
+            .filter(f => f.endsWith("_bottle.md") && !f.startsWith(excludeTaskId))
+            .map(f => path.join(TASKS_DIR, f));
+        // taskId = task_${Date.now()} — 13-digit timestamp — lexicographic = chronological
+        bottleFiles.sort();
+        return bottleFiles.slice(-limit);
+    }
+    catch {
+        return [];
+    }
+}
+async function updateBroccoloLog(taskId, summary) {
+    const journalPath = path.join(JOURNAL_DIR, "broccolo.json");
+    try {
+        let journal;
+        try {
+            const raw = await fs.readFile(journalPath, "utf-8");
+            journal = JSON.parse(raw);
+        }
+        catch {
+            journal = {
+                villagerId: "broccolo",
+                userFacts: {},
+                completedTasks: [],
+                relationships: {},
+                baseline: null,
+            };
+        }
+        journal.completedTasks.push({ taskId, summary });
+        await fs.writeFile(journalPath, JSON.stringify(journal, null, 2), "utf-8");
+    }
+    catch {
+        // non-fatal — task is already complete; a journal write failure is acceptable
+    }
+}
 // ── Prompts ───────────────────────────────────────────────────────────────────
 const SHERB_PLAN_SYSTEM = `You are Sherb, a cheerful goat villager and the island planner on Nook Island.
 Read the user's task and propose a plan.
@@ -21,13 +64,29 @@ Use exactly this shape:
 {
   "task": "one sentence description of the task",
   "steps": [
-    { "villager": "maple", "action": "what maple should do" },
-    { "villager": "zucker", "action": "what zucker should do" },
-    { "villager": "marshal", "action": "what marshal should do" }
+    { "villager": "maple",   "action": "what maple should do" },
+    { "villager": "zucker",  "action": "what zucker should do" },
+    { "villager": "marshal", "action": "what marshal should do" },
+    { "villager": "piper",   "action": "close the task with a narrative and update her journal" }
   ]
 }
-Available villagers for this session: maple (research), zucker (writing/drafting), marshal (critique/review).
-For writing tasks: always include maple → zucker → marshal in that order.`;
+Available villagers for this session: maple (research), zucker (writing/drafting), marshal (critique/review), piper (narrator), broccolo (tracker — include when the task involves patterns, history, or repeated work).
+For writing tasks: always include maple → zucker → marshal → piper in that order.
+The "piper" step action should always be: "close the task with a narrative and update her journal".
+Include broccolo as a 5th step (after piper) when the task is analytical, recurring, or when historical context would improve the output.
+The "broccolo" step action should always be: "archive this task and identify patterns from task history".
+
+Example with broccolo (use when task warrants historical tracking):
+{
+  "task": "one sentence description of the task",
+  "steps": [
+    { "villager": "maple",    "action": "what maple should do" },
+    { "villager": "zucker",   "action": "what zucker should do" },
+    { "villager": "marshal",  "action": "what marshal should do" },
+    { "villager": "piper",    "action": "close the task with a narrative and update her journal" },
+    { "villager": "broccolo", "action": "archive this task and identify patterns from task history" }
+  ]
+}`;
 const SHERB_EXEC_SYSTEM = `You are Sherb, the island planner on Nook Island.
 Execute the approved plan by summoning each villager using the Agent tool.
 Delegate each step exactly as listed in the plan.
@@ -37,10 +96,14 @@ Available villagers and their roles:
 - maple: Scout — web research, writes notes + appends findings to bottle
 - zucker: Producer — reads Maple's notes, drafts the Final Output section in the bottle
 - marshal: Critic — reviews Zucker's draft, writes verdict to bottle (APPROVED or REVISION NEEDED)
+- piper: Narrator — reads the completed bottle, writes a warm closing story, updates her journal
+- broccolo: Tracker — reads the completed bottle + recent task history, appends pattern insights, updates his journal
 
 For writing tasks: summon maple first, then zucker to draft, then marshal to review.
 If marshal returns REVISION NEEDED, summon zucker again to revise based on the critique.
-Marshal may only reject once — if marshal reviews a second time, they must approve.`;
+Marshal may only reject once — if marshal reviews a second time, they must approve.
+After marshal approves (or after zucker's second revision), always summon piper to close the task.
+If the plan includes broccolo, summon broccolo after piper — broccolo always runs last when present.`;
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function buildMaplePrompt(paths) {
     return `You are Maple, a sweet and curious bear cub villager on Nook Island.
@@ -101,6 +164,53 @@ Instructions:
 
 Follow CLAUDE.md rules. Be direct: "It's fine. It's almost fine. Here's what's wrong."`;
 }
+function buildPiperPrompt(paths) {
+    const journalPath = path.join(JOURNAL_DIR, "piper.json");
+    return `You are Piper, a warm and observant bird villager on Nook Island. You are the island's storyteller and keeper of memories.
+
+Your files:
+- Bottle: ${paths.bottle}
+- Your journal: ${journalPath}
+
+Instructions:
+1. Read the completed bottle file — absorb the whole task journey.
+2. Append your section to the bottle under "## 🗺️ Journey":
+   - Heading: "### 🦜 Piper narrated"
+   - 3–5 warm sentences telling the story of this task (who did what, what was interesting, how the team worked)
+   - One quiet closing observation
+3. Read your journal at ${journalPath}. Then write the full updated JSON back:
+   - completedTasks: append { "taskId": "${paths.taskId}", "summary": "1 sentence on what happened" }
+   - userFacts: add anything new you learned about Jackson from this task
+   - relationships: note any notable moments between villagers you observed
+   Parse carefully, write valid JSON only. If the file is missing or unparseable, start fresh with the JournalFile schema.
+4. Do NOT touch the "## ✉️ Final Output" section.
+`;
+}
+function buildBroccoloPrompt(paths) {
+    const journalPath = path.join(JOURNAL_DIR, "broccolo.json");
+    const pastList = paths.pastBottles.length > 0
+        ? paths.pastBottles.map(p => `- ${p}`).join("\n")
+        : "(no past tasks yet)";
+    return `You are Broccolo, a methodical caterpillar villager on Nook Island. You are the island's tracker — you find patterns, measure state over time, and keep careful records.
+
+Your files:
+- Current bottle: ${paths.bottle}
+- Your journal: ${journalPath}
+- Recent task bottles (up to 10, oldest → newest):
+${pastList}
+
+Instructions:
+1. Read the current completed bottle — understand what this task was about.
+2. Read as many of the recent task bottles as needed to find patterns.
+3. Append your section to the current bottle under "## 🗺️ Journey":
+   - Heading: "### 🐛 Broccolo tracked"
+   - 3–5 bullets of patterns you notice across recent tasks (recurring topics, Jackson's style preferences, what kinds of tasks come up often, what works well)
+   - One quiet closing note with a specific data point ("This is the 4th writing task in the last 7.")
+4. Read your journal at ${journalPath}. Update only the userFacts and relationships fields with any new patterns you noticed, then write the COMPLETE JSON back (preserving all other fields exactly as-is, including completedTasks — the island system already logged this task automatically, do not touch that array).
+   If the file is missing or unparseable, start fresh with the JournalFile schema (villagerId: "broccolo", userFacts: {}, completedTasks: [], relationships: {}, baseline: null).
+5. Do NOT touch "## ✉️ Final Output" or any other villager's journey section.
+`;
+}
 /** Extract JSON plan from Sherb's result string. Tries direct parse, falls back to regex. */
 function parsePlan(raw) {
     try {
@@ -134,6 +244,21 @@ function parsePlan(raw) {
 export async function runTwoStepSherb(win, description, onPlanProposed) {
     const taskId = generateTaskId();
     const paths = getTaskPaths(taskId);
+    // Load Piper's island memory for Sherb's planning context
+    let islandMemory = "";
+    try {
+        const piperJournalPath = path.join(JOURNAL_DIR, "piper.json");
+        const raw = await fs.readFile(piperJournalPath, "utf-8");
+        const journal = JSON.parse(raw);
+        const hasFacts = Object.keys(journal.userFacts).length > 0;
+        const hasTasks = journal.completedTasks.length > 0;
+        if (hasFacts || hasTasks) {
+            islandMemory = `\n\nIsland memory (from Piper's journal):\n${JSON.stringify({ userFacts: journal.userFacts, relationships: journal.relationships }, null, 2)}`;
+        }
+    }
+    catch {
+        // journal missing or unparseable — proceed without memory
+    }
     await initBottleFile(taskId, description);
     const taskReceivedEvent = {
         type: "task_received",
@@ -152,7 +277,7 @@ export async function runTwoStepSherb(win, description, onPlanProposed) {
     for await (const message of query({
         prompt: description,
         options: {
-            systemPrompt: SHERB_PLAN_SYSTEM,
+            systemPrompt: SHERB_PLAN_SYSTEM + islandMemory,
             allowedTools: [], // no tools — pure reasoning
             maxTurns: 1,
             cwd: app.getAppPath(),
@@ -211,6 +336,8 @@ Use the Agent tool to summon each villager in the order listed in the plan.
 Pass them the bottle and notes file paths so they know where to write their output.`;
     // Track which agent is currently active (for PreToolUse hook agentId)
     let currentAgent = "sherb";
+    const pastBottlePaths = await getPastBottles(taskId, 10);
+    const agentPaths = { ...paths, taskId, pastBottles: pastBottlePaths };
     for await (const message of query({
         prompt: execPrompt,
         options: {
@@ -234,6 +361,16 @@ Pass them the bottle and notes file paths so they know where to write their outp
                     description: "Use Marshal to review Zucker's draft. He reads the bottle and appends APPROVED or REVISION NEEDED with specific critique.",
                     tools: ["Read", "Write"],
                     prompt: buildMarshalPrompt(paths),
+                },
+                piper: {
+                    description: "Use Piper to close the task with a warm narrative and update her journal.",
+                    tools: ["Read", "Write"],
+                    prompt: buildPiperPrompt(agentPaths),
+                },
+                broccolo: {
+                    description: "Use Broccolo to archive the completed task and identify patterns from recent task history. Summon after Piper when the task is analytical, recurring, or when historical patterns would add value.",
+                    tools: ["Read", "Write"],
+                    prompt: buildBroccoloPrompt(agentPaths),
                 },
             },
             permissionMode: "dontAsk",
@@ -296,6 +433,9 @@ Pass them the bottle and notes file paths so they know where to write their outp
                 win.webContents.send(CHANNELS.ISLAND_EVENT, completeEvent);
                 // Open the bottle in the default markdown editor — the mailbox delivery moment
                 await shell.openPath(paths.bottle);
+                // Layer 1: always log every completed task to broccolo.json (no AI call).
+                // Runs even when Broccolo was not in the plan — this is the system-level audit log.
+                await updateBroccoloLog(taskId, description);
             }
         }
     }
