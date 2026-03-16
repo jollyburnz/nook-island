@@ -1,0 +1,23 @@
+src/canvas/villagers/Piper.ts
+  99ec817f569d8509 1-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "43297976503256a1d3f0e670a3773810aa49669b",
+  "prompts": {
+    "99ec817f569d8509": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04589c7a-9393-4ec6-b1ec-0b28dff6f0ca",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "jollyburnz <j@cksonl.in>",
+      "messages": [],
+      "total_additions": 37,
+      "total_deletions": 0,
+      "accepted_lines": 37,
+      "overriden_lines": 0
+    }
+  }
+}
