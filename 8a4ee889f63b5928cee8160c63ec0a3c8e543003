@@ -1,0 +1,23 @@
+src/canvas/world/World.ts
+  99ec817f569d8509 22,85-86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "8a4ee889f63b5928cee8160c63ec0a3c8e543003",
+  "prompts": {
+    "99ec817f569d8509": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04589c7a-9393-4ec6-b1ec-0b28dff6f0ca",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "jollyburnz <j@cksonl.in>",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 1,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
