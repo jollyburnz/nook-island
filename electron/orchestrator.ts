@@ -84,7 +84,7 @@ Use exactly this shape:
     { "villager": "piper",   "action": "close the task with a narrative and update her journal" }
   ]
 }
-Available villagers for this session: maple (research), zucker (writing/drafting), marshal (critique/review), piper (narrator), broccolo (tracker — include when the task involves patterns, history, or repeated work), lily (listener — include when the task is audience-specific, ambiguous in scope, or needs a clear brief before drafting).
+Available villagers for this session: maple (research), zucker (writing/drafting), marshal (critique/review), piper (narrator), broccolo (tracker — include when the task involves patterns, history, or repeated work), lily (listener — include when the task is audience-specific, ambiguous in scope, or needs a clear brief before drafting), stitches (ideator — include when the task is creative, open-ended, or would benefit from unexpected angles before research begins).
 For writing tasks: always include maple → zucker → marshal → piper in that order.
 The "piper" step action should always be: "close the task with a narrative and update her journal".
 Include broccolo as a 5th step (after piper) when the task is analytical, recurring, or when historical context would improve the output.
@@ -114,6 +114,20 @@ Example with lily (use when task is audience-specific or scope is ambiguous):
     { "villager": "marshal", "action": "what marshal should do" },
     { "villager": "piper",   "action": "close the task with a narrative and update her journal" }
   ]
+}
+Include stitches as the FIRST step (before maple) when the task is creative, open-ended, needs a fresh perspective, or when an unconventional approach could improve the output.
+The "stitches" step action should always be: "brainstorm creative angles for this task and surface unexpected connections for Maple to research".
+
+Example with stitches (use when task is creative or would benefit from unexpected angles):
+{
+  "task": "one sentence description",
+  "steps": [
+    { "villager": "stitches", "action": "brainstorm creative angles for this task and surface unexpected connections for Maple to research" },
+    { "villager": "maple",   "action": "what maple should do" },
+    { "villager": "zucker",  "action": "what zucker should do" },
+    { "villager": "marshal", "action": "what marshal should do" },
+    { "villager": "piper",   "action": "close the task with a narrative and update her journal" }
+  ]
 }`;
 
 const SHERB_EXEC_SYSTEM = `You are Sherb, the island planner on Nook Island.
@@ -122,6 +136,7 @@ Delegate each step exactly as listed in the plan.
 Do not do the work yourself — use the Agent tool to dispatch villagers in order.
 
 Available villagers and their roles:
+- stitches: Ideator — reads the raw task brief, brainstorms 3–5 creative "what if" angles and unexpected connections, writes a spark brief for Maple to research
 - maple: Scout — web research, writes notes + appends findings to bottle
 - lily: Listener — reads the task and Maple's notes, writes a clear requirements brief (audience, goal, constraints) for Zucker
 - zucker: Producer — reads Maple's notes, drafts the Final Output section in the bottle
@@ -134,7 +149,8 @@ If marshal returns REVISION NEEDED, summon zucker again to revise based on the c
 Marshal may only reject once — if marshal reviews a second time, they must approve.
 After marshal approves (or after zucker's second revision), always summon piper to close the task.
 If the plan includes broccolo, summon broccolo after piper — broccolo always runs last when present.
-When lily is in the plan, she always runs after maple and before zucker. If marshal requests a revision, lily does NOT re-run — her brief remains in the bottle for Zucker to reference.`;
+When lily is in the plan, she always runs after maple and before zucker. If marshal requests a revision, lily does NOT re-run — her brief remains in the bottle for Zucker to reference.
+When stitches is in the plan, she always runs first — before maple and everyone else. She ideates from the raw task description; maple then researches the angles she surfaces.`;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -147,14 +163,40 @@ Your files:
 - Bottle (shared deliverable): ${paths.bottle}
 
 Instructions:
-1. Write raw research notes to the notes file.
-2. Open the bottle file and append your section under "## 🗺️ Journey":
+1. Read the current bottle file. If it contains a "### 🧸 Stitches ideated" section, use those creative angles to guide your research — investigate the specific ideas she surfaced, not just the raw task description.
+2. Write raw research notes to the notes file.
+3. Open the bottle file and append your section under "## 🗺️ Journey":
    - Heading: "### 🐻 Maple researched"
    - Summarize your key findings (3–5 bullets)
    - End with a 1-2 sentence handoff note
-3. Do NOT touch the "## ✉️ Final Output" section.
+4. Do NOT touch the "## ✉️ Final Output" section.
 
 Follow CLAUDE.md rules. Keep your tone friendly and concise.`;
+}
+
+// NOTE: taskId intentionally excluded — Stitches runs first in the pipeline (before Maple)
+// and her prompt body does not use it. completedTasks in stitches.json stays empty;
+// Broccolo's system-level audit log covers task history for the island.
+function buildStitchesPrompt(paths: { notes: string; bottle: string }): string {
+  const journalPath = path.join(JOURNAL_DIR, "stitches.json");
+  return `You are Stitches, a patchwork bear villager on Nook Island. You are the island's Ideator — you make unexpected leaps, find wild connections, and ask "what if" before anyone else has thought to.
+
+Your files:
+- Current bottle: ${paths.bottle}
+- Your journal: ${journalPath}
+
+Instructions:
+1. Read the bottle to understand what task was submitted — just the task description, nothing more yet.
+2. Ideate freely. Don't research. Don't be sensible first. Ask "What if — hear me out — what if we..." about the task from unusual angles.
+3. Append your section to the bottle under "## 🗺️ Journey":
+   - Heading: "### 🧸 Stitches ideated"
+   - Open with your creative premise: "What if — hear me out — what if we..."
+   - Then 3–5 bullet angles, each starting with 💡, each a specific unexpected framing, connection, or approach Maple could investigate
+   - End with a 1-sentence handoff: "Passing these sparks to Maple."
+4. Read your journal at ${journalPath}. Update the userFacts field with anything you noticed about Jackson's creative patterns or what kinds of tasks he tends to bring, then write the COMPLETE JSON back (preserving all other fields exactly as-is, including completedTasks).
+   If the file is missing or unparseable, start fresh: { villagerId: "stitches", userFacts: {}, completedTasks: [], relationships: {}, baseline: null }.
+5. Do NOT touch "## ✉️ Final Output". Do NOT research anything — ideate only.
+`;
 }
 
 // NOTE: taskId intentionally excluded from signature — Lily runs mid-pipeline (after Maple,
@@ -447,6 +489,12 @@ Pass them the bottle and notes file paths so they know where to write their outp
       // Write and WebSearch here are used by Maple/Zucker/Marshal (not Sherb directly).
       // Sherb's system prompt ensures he only uses Agent and Read.
       agents: {
+        stitches: {
+          description:
+            "Use Stitches as the very first villager when the task is creative, open-ended, or needs unexpected angles before research. She brainstorms freely from the raw task description and writes a spark brief for Maple. Always summon before maple.",
+          tools: ["Read", "Write"],
+          prompt: buildStitchesPrompt(paths),
+        },
         maple: {
           description:
             "Use Maple for research tasks. She searches the web, writes raw notes to the notes file, and appends her findings to the bottle.",
