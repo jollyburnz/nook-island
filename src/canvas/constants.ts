@@ -13,11 +13,11 @@ export const DISTRICT_POS = {
 export type DistrictKey = keyof typeof DISTRICT_POS;
 
 export const VILLAGER_TO_DISTRICT: Record<string, DistrictKey> = {
-  sherb: "townhall", maple: "forest", zucker: "library", marshal: "cafe",
+  sherb: "townhall", maple: "forest", zucker: "library", marshal: "cafe", piper: "plaza",
 };
 
 export const VILLAGER_EMOJI: Record<string, string> = {
-  sherb: "🐐", maple: "🐻", zucker: "🐙", marshal: "🐿️",
+  sherb: "🐐", maple: "🐻", zucker: "🐙", marshal: "🐿️", piper: "🦜",
 };
 
 export const COLORS = {
@@ -33,6 +33,7 @@ export const COLORS = {
   maple:   0xe8a87c,
   zucker:  0xe07060,
   marshal: 0x9ba7b0,
+  piper:   0xffe066,
   mailbox: 0xc0392b,
   bottle:  0x88ccff,
   cork:    0xc3b1e1,
