@@ -1,0 +1,23 @@
+docs/superpowers/specs/2026-03-16-lily-requirements-clarifier-design.md
+  99ec817f569d8509 42-43,85-86,90,122-123,135,160,167,171,176,178,182,203,205,220,230,233-234,244,246-247,249
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "c716d0d8b84d83b465d8136fff73778abf690e1d",
+  "prompts": {
+    "99ec817f569d8509": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04589c7a-9393-4ec6-b1ec-0b28dff6f0ca",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "jollyburnz <j@cksonl.in>",
+      "messages": [],
+      "total_additions": 25,
+      "total_deletions": 18,
+      "accepted_lines": 25,
+      "overriden_lines": 0
+    }
+  }
+}
