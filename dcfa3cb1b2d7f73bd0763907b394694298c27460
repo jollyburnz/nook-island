@@ -1,0 +1,39 @@
+src/canvas/villagers/Sherb.ts
+  99ec817f569d8509 7-52
+src/canvas/villagers/Zucker.ts
+  99ec817f569d8509 7-11,13-19,21-45
+src/canvas/hud/IslandHUD.tsx
+  99ec817f569d8509 29-41,62,69,76,92,100,107,119,125,132
+src/canvas/villagers/Marshal.ts
+  99ec817f569d8509 7-53
+src/components/TownHall.tsx
+  99ec817f569d8509 18
+src/canvas/villagers/Maple.ts
+  99ec817f569d8509 7-50
+src/canvas/villagers/Villager.ts
+  99ec817f569d8509 26-29,56
+src/components/PlanApproval.tsx
+  99ec817f569d8509 36
+src/components/WorkflowPanel.tsx
+  99ec817f569d8509 47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "dcfa3cb1b2d7f73bd0763907b394694298c27460",
+  "prompts": {
+    "99ec817f569d8509": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04589c7a-9393-4ec6-b1ec-0b28dff6f0ca",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "jollyburnz <j@cksonl.in>",
+      "messages": [],
+      "total_additions": 209,
+      "total_deletions": 109,
+      "accepted_lines": 209,
+      "overriden_lines": 0
+    }
+  }
+}
