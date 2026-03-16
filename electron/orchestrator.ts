@@ -231,10 +231,8 @@ Instructions:
    - Heading: "### 🐛 Broccolo tracked"
    - 3–5 bullets of patterns you notice across recent tasks (recurring topics, Jackson's style preferences, what kinds of tasks come up often, what works well)
    - One quiet closing note with a specific data point ("This is the 4th writing task in the last 7.")
-4. Read your journal at ${journalPath}. Update the userFacts field with any new patterns you noticed, then write the full JSON back.
-   - DO NOT modify completedTasks — the island system already logged this task automatically.
-   - Only update userFacts and relationships.
-   If the file is missing or unparseable, start fresh with the JournalFile schema (villagerId, userFacts, completedTasks, relationships, baseline: null).
+4. Read your journal at ${journalPath}. Update only the userFacts and relationships fields with any new patterns you noticed, then write the COMPLETE JSON back (preserving all other fields exactly as-is, including completedTasks — the island system already logged this task automatically, do not touch that array).
+   If the file is missing or unparseable, start fresh with the JournalFile schema (villagerId: "broccolo", userFacts: {}, completedTasks: [], relationships: {}, baseline: null).
 5. Do NOT touch "## ✉️ Final Output" or any other villager's journey section.
 `;
 }
@@ -503,6 +501,8 @@ Pass them the bottle and notes file paths so they know where to write their outp
         win.webContents.send(CHANNELS.ISLAND_EVENT, completeEvent);
         // Open the bottle in the default markdown editor — the mailbox delivery moment
         await shell.openPath(paths.bottle);
+        // Layer 1: always log every completed task to broccolo.json (no AI call).
+        // Runs even when Broccolo was not in the plan — this is the system-level audit log.
         await updateBroccoloLog(taskId, description);
       }
     }
