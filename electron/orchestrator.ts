@@ -25,6 +25,44 @@ import { getDataDir } from "./data.js";
 import type { JournalFile } from "./data.js";
 
 const JOURNAL_DIR = path.join(getDataDir(), "journals");
+const TASKS_DIR = path.join(getDataDir(), "tasks");
+
+async function getPastBottles(excludeTaskId: string, limit: number): Promise<string[]> {
+  try {
+    const entries = await fs.readdir(TASKS_DIR);
+    const bottleFiles = entries
+      .filter(f => f.endsWith("_bottle.md") && !f.startsWith(excludeTaskId))
+      .map(f => path.join(TASKS_DIR, f));
+    // taskId = task_${Date.now()} — 13-digit timestamp — lexicographic = chronological
+    bottleFiles.sort();
+    return bottleFiles.slice(-limit);
+  } catch {
+    return [];
+  }
+}
+
+async function updateBroccoloLog(taskId: string, summary: string): Promise<void> {
+  const journalPath = path.join(JOURNAL_DIR, "broccolo.json");
+  try {
+    let journal: JournalFile;
+    try {
+      const raw = await fs.readFile(journalPath, "utf-8");
+      journal = JSON.parse(raw) as JournalFile;
+    } catch {
+      journal = {
+        villagerId: "broccolo",
+        userFacts: {},
+        completedTasks: [],
+        relationships: {},
+        baseline: null,
+      };
+    }
+    journal.completedTasks.push({ taskId, summary });
+    await fs.writeFile(journalPath, JSON.stringify(journal, null, 2), "utf-8");
+  } catch {
+    // non-fatal — task is already complete; a journal write failure is acceptable
+  }
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -46,9 +84,23 @@ Use exactly this shape:
     { "villager": "piper",   "action": "close the task with a narrative and update her journal" }
   ]
 }
-Available villagers for this session: maple (research), zucker (writing/drafting), marshal (critique/review), piper (narrator).
+Available villagers for this session: maple (research), zucker (writing/drafting), marshal (critique/review), piper (narrator), broccolo (tracker — include when the task involves patterns, history, or repeated work).
 For writing tasks: always include maple → zucker → marshal → piper in that order.
-The "piper" step action should always be: "close the task with a narrative and update her journal".`;
+The "piper" step action should always be: "close the task with a narrative and update her journal".
+Include broccolo as a 5th step (after piper) when the task is analytical, recurring, or when historical context would improve the output.
+The "broccolo" step action should always be: "archive this task and identify patterns from task history".
+
+Example with broccolo (use when task warrants historical tracking):
+{
+  "task": "one sentence description of the task",
+  "steps": [
+    { "villager": "maple",    "action": "what maple should do" },
+    { "villager": "zucker",   "action": "what zucker should do" },
+    { "villager": "marshal",  "action": "what marshal should do" },
+    { "villager": "piper",    "action": "close the task with a narrative and update her journal" },
+    { "villager": "broccolo", "action": "archive this task and identify patterns from task history" }
+  ]
+}`;
 
 const SHERB_EXEC_SYSTEM = `You are Sherb, the island planner on Nook Island.
 Execute the approved plan by summoning each villager using the Agent tool.
@@ -60,11 +112,13 @@ Available villagers and their roles:
 - zucker: Producer — reads Maple's notes, drafts the Final Output section in the bottle
 - marshal: Critic — reviews Zucker's draft, writes verdict to bottle (APPROVED or REVISION NEEDED)
 - piper: Narrator — reads the completed bottle, writes a warm closing story, updates her journal
+- broccolo: Tracker — reads the completed bottle + recent task history, appends pattern insights, updates his journal
 
 For writing tasks: summon maple first, then zucker to draft, then marshal to review.
 If marshal returns REVISION NEEDED, summon zucker again to revise based on the critique.
 Marshal may only reject once — if marshal reviews a second time, they must approve.
-After marshal approves (or after zucker's second revision), always summon piper last to close the task.`;
+After marshal approves (or after zucker's second revision), always summon piper to close the task.
+If the plan includes broccolo, summon broccolo after piper — broccolo always runs last when present.`;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -150,6 +204,38 @@ Instructions:
    - relationships: note any notable moments between villagers you observed
    Parse carefully, write valid JSON only. If the file is missing or unparseable, start fresh with the JournalFile schema.
 4. Do NOT touch the "## ✉️ Final Output" section.
+`;
+}
+
+function buildBroccoloPrompt(paths: {
+  bottle: string;
+  taskId: string;
+  pastBottles: string[];
+}): string {
+  const journalPath = path.join(JOURNAL_DIR, "broccolo.json");
+  const pastList = paths.pastBottles.length > 0
+    ? paths.pastBottles.map(p => `- ${p}`).join("\n")
+    : "(no past tasks yet)";
+  return `You are Broccolo, a methodical caterpillar villager on Nook Island. You are the island's tracker — you find patterns, measure state over time, and keep careful records.
+
+Your files:
+- Current bottle: ${paths.bottle}
+- Your journal: ${journalPath}
+- Recent task bottles (up to 10, oldest → newest):
+${pastList}
+
+Instructions:
+1. Read the current completed bottle — understand what this task was about.
+2. Read as many of the recent task bottles as needed to find patterns.
+3. Append your section to the current bottle under "## 🗺️ Journey":
+   - Heading: "### 🐛 Broccolo tracked"
+   - 3–5 bullets of patterns you notice across recent tasks (recurring topics, Jackson's style preferences, what kinds of tasks come up often, what works well)
+   - One quiet closing note with a specific data point ("This is the 4th writing task in the last 7.")
+4. Read your journal at ${journalPath}. Update the userFacts field with any new patterns you noticed, then write the full JSON back.
+   - DO NOT modify completedTasks — the island system already logged this task automatically.
+   - Only update userFacts and relationships.
+   If the file is missing or unparseable, start fresh with the JournalFile schema (villagerId, userFacts, completedTasks, relationships, baseline: null).
+5. Do NOT touch "## ✉️ Final Output" or any other villager's journey section.
 `;
 }
 
@@ -307,7 +393,8 @@ Pass them the bottle and notes file paths so they know where to write their outp
   // Track which agent is currently active (for PreToolUse hook agentId)
   let currentAgent = "sherb";
 
-  const agentPaths = { ...paths, taskId };
+  const pastBottlePaths = await getPastBottles(taskId, 10);
+  const agentPaths = { ...paths, taskId, pastBottles: pastBottlePaths };
 
   for await (const message of query({
     prompt: execPrompt,
@@ -341,6 +428,12 @@ Pass them the bottle and notes file paths so they know where to write their outp
             "Use Piper to close the task with a warm narrative and update her journal.",
           tools: ["Read", "Write"],
           prompt: buildPiperPrompt(agentPaths),
+        },
+        broccolo: {
+          description:
+            "Use Broccolo to archive the completed task and identify patterns from recent task history. Summon after Piper when the task is analytical, recurring, or when historical patterns would add value.",
+          tools: ["Read", "Write"],
+          prompt: buildBroccoloPrompt(agentPaths),
         },
       },
       permissionMode: "dontAsk",
@@ -410,6 +503,7 @@ Pass them the bottle and notes file paths so they know where to write their outp
         win.webContents.send(CHANNELS.ISLAND_EVENT, completeEvent);
         // Open the bottle in the default markdown editor — the mailbox delivery moment
         await shell.openPath(paths.bottle);
+        await updateBroccoloLog(taskId, description);
       }
     }
   }
