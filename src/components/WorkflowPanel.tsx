@@ -44,16 +44,7 @@ export function WorkflowPanel({ events, cost }: Props) {
   const isComplete = events.some((e) => e.type === "task_complete");
 
   return (
-    <div
-      style={{
-        maxWidth: 520,
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        gap: 12,
-        padding: "0 24px",
-      }}
-    >
+    <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
       {sections.length === 0 && !isComplete && (
         <div
           style={{

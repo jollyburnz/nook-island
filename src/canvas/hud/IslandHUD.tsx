@@ -22,9 +22,23 @@ const glass: CSSProperties = {
   backdropFilter: "blur(12px)",
   WebkitBackdropFilter: "blur(12px)",
   borderRadius: 16,
-  padding: 24,
   boxShadow: "0 8px 32px rgba(0,0,0,0.20)",
   border: "1.5px solid rgba(255,255,255,0.65)",
+};
+
+// Centered modal cards (idle, plan-proposed, error)
+const centerCard: CSSProperties = {
+  ...glass,
+  padding: 20,
+  width: 460,
+  pointerEvents: "auto",
+};
+
+// Sidebar card (executing / complete)
+const sideCard: CSSProperties = {
+  ...glass,
+  padding: 20,
+  width: 300,
 };
 
 export function IslandHUD({
@@ -45,21 +59,21 @@ export function IslandHUD({
     >
       {/* Idle: centered task input */}
       {phase === "idle" && (
-        <div style={{ ...glass, pointerEvents: "auto" }}>
+        <div style={centerCard}>
           <TownHall onSubmit={onSubmit} />
         </div>
       )}
 
       {/* Plan proposed: plan ready to approve */}
       {phase === "plan_proposed" && plan && (
-        <div style={{ ...glass, pointerEvents: "auto" }}>
+        <div style={centerCard}>
           <PlanApproval plan={plan} onApprove={() => {}} onReject={onReject} />
         </div>
       )}
 
       {/* Plan proposed but plan not yet arrived (Sherb thinking) */}
       {phase === "plan_proposed" && !plan && (
-        <div style={{ ...glass, pointerEvents: "none", color: "#2d5a3d", fontSize: 15 }}>
+        <div style={{ ...centerCard, pointerEvents: "none", color: "#2d5a3d", fontSize: 15 }}>
           ⟳ Sherb is planning…
         </div>
       )}
@@ -71,12 +85,11 @@ export function IslandHUD({
             position: "fixed",
             top: 24,
             right: 24,
-            pointerEvents: "auto",
             maxHeight: "calc(100vh - 48px)",
             overflowY: "auto",
           }}
         >
-          <div style={glass}>
+          <div style={sideCard}>
             <WorkflowPanel events={events} cost={cost} />
             {phase === "complete" && (
               <button
@@ -84,13 +97,14 @@ export function IslandHUD({
                 style={{
                   marginTop: 12,
                   width: "100%",
-                  padding: "8px 0",
+                  padding: "9px 0",
                   borderRadius: 8,
                   background: "#2d5a3d",
                   color: "#fff",
                   border: "none",
                   cursor: "pointer",
                   fontSize: 13,
+                  fontFamily: "inherit",
                 }}
               >
                 ← New task
@@ -102,19 +116,20 @@ export function IslandHUD({
 
       {/* Error */}
       {phase === "error" && (
-        <div style={{ ...glass, textAlign: "center", pointerEvents: "auto" }}>
+        <div style={{ ...centerCard, textAlign: "center" }}>
           <div style={{ fontSize: 32 }}>⚠️</div>
           <p style={{ margin: "8px 0 16px", color: "#2d5a3d" }}>Something went wrong</p>
           <button
             onClick={onReset}
             style={{
-              padding: "8px 16px",
+              padding: "9px 18px",
               borderRadius: 8,
               background: "#2d5a3d",
               color: "#fff",
               border: "none",
               cursor: "pointer",
               fontSize: 13,
+              fontFamily: "inherit",
             }}
           >
             ← Try again

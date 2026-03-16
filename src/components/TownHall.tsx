@@ -15,7 +15,7 @@ export function TownHall({ onSubmit }: Props) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 600, width: "100%", padding: "0 24px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
       <h2 style={{ margin: 0, fontSize: 18, color: "#2d5a3d" }}>
         🏝️ What should the villagers work on?
       </h2>

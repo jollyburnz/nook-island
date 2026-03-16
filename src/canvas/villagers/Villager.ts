@@ -23,9 +23,10 @@ export abstract class Villager extends PIXI.Container {
 
   private drawThinkBubble(): void {
     const g = this.thinkBubble;
-    g.circle(-8, -48, 3).fill({ color: 0xffffff, alpha: 0.85 });
-    g.circle(0, -48, 3).fill({ color: 0xffffff, alpha: 0.85 });
-    g.circle(8, -48, 3).fill({ color: 0xffffff, alpha: 0.85 });
+    // Slightly higher to give taller sprites (ears/horns) breathing room
+    g.circle(-8, -56, 3.5).fill({ color: 0xffffff, alpha: 0.9 });
+    g.circle(0, -56, 3.5).fill({ color: 0xffffff, alpha: 0.9 });
+    g.circle(8, -56, 3.5).fill({ color: 0xffffff, alpha: 0.9 });
   }
 
   setActive(active: boolean): void {
@@ -52,7 +53,7 @@ export abstract class Villager extends PIXI.Container {
       if (this.highlightAlpha > 0.7) this.highlightDir = -1;
       if (this.highlightAlpha < 0.2) this.highlightDir = 1;
       this.highlightRing.clear();
-      this.highlightRing.circle(0, 4, 26).fill({ color: 0xffffff, alpha: this.highlightAlpha });
+      this.highlightRing.circle(0, 4, 30).fill({ color: 0xffffff, alpha: this.highlightAlpha });
     } else {
       this.highlightRing.clear();
     }

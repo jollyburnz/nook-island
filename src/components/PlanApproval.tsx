@@ -33,17 +33,7 @@ export function PlanApproval({ plan, onApprove, onReject }: Props) {
   };
 
   return (
-    <div
-      style={{
-        maxWidth: 520,
-        width: "100%",
-        background: "#f0f7f4",
-        borderRadius: 12,
-        padding: 24,
-        border: "2px solid #a8d5be",
-        margin: "0 24px",
-      }}
-    >
+    <div style={{ width: "100%" }}>
       <h2 style={{ margin: "0 0 4px", fontSize: 18, color: "#2d5a3d" }}>
         🐐 Sherb&apos;s Plan
       </h2>
