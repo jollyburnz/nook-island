@@ -18,6 +18,7 @@ import { Maple } from "../villagers/Maple";
 import { Zucker } from "../villagers/Zucker";
 import { Marshal } from "../villagers/Marshal";
 import { Piper } from "../villagers/Piper.js";
+import { Broccolo } from "../villagers/Broccolo.js";
 import type { Villager } from "../villagers/Villager";
 import type { Camera } from "../camera/Camera";
 
@@ -79,7 +80,8 @@ export class World extends PIXI.Container {
     const zucker  = new Zucker();
     const marshal = new Marshal();
     const piper   = new Piper();
-    this.villagers = { sherb, maple, zucker, marshal, piper };
+    const broccolo = new Broccolo();
+    this.villagers = { sherb, maple, zucker, marshal, piper, broccolo };
 
     for (const [name, v] of Object.entries(this.villagers)) {
       const distKey = VILLAGER_TO_DISTRICT[name];
@@ -94,6 +96,10 @@ export class World extends PIXI.Container {
     piper.x = DISTRICT_POS.plaza.x - 28;
     piper.y = DISTRICT_POS.plaza.y - 5;
     (piper as unknown as { baseY: number }).baseY = piper.y; // baseY is protected — same cast as loop
+
+    broccolo.x = DISTRICT_POS.plaza.x + 28;
+    broccolo.y = DISTRICT_POS.plaza.y - 5;
+    (broccolo as unknown as { baseY: number }).baseY = broccolo.y;
 
     // 6. Bottle (hidden initially)
     this.bottle = new Bottle();
