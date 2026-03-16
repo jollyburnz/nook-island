@@ -19,6 +19,12 @@ import {
   initBottleFile,
   appendTaskEvent,
 } from "./tasks.js";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { getDataDir } from "./data.js";
+import type { JournalFile } from "./data.js";
+
+const JOURNAL_DIR = path.join(getDataDir(), "journals");
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -34,13 +40,15 @@ Use exactly this shape:
 {
   "task": "one sentence description of the task",
   "steps": [
-    { "villager": "maple", "action": "what maple should do" },
-    { "villager": "zucker", "action": "what zucker should do" },
-    { "villager": "marshal", "action": "what marshal should do" }
+    { "villager": "maple",   "action": "what maple should do" },
+    { "villager": "zucker",  "action": "what zucker should do" },
+    { "villager": "marshal", "action": "what marshal should do" },
+    { "villager": "piper",   "action": "close the task with a narrative and update her journal" }
   ]
 }
-Available villagers for this session: maple (research), zucker (writing/drafting), marshal (critique/review).
-For writing tasks: always include maple → zucker → marshal in that order.`;
+Available villagers for this session: maple (research), zucker (writing/drafting), marshal (critique/review), piper (narrator).
+For writing tasks: always include maple → zucker → marshal → piper in that order.
+The "piper" step action should always be: "close the task with a narrative and update her journal".`;
 
 const SHERB_EXEC_SYSTEM = `You are Sherb, the island planner on Nook Island.
 Execute the approved plan by summoning each villager using the Agent tool.
@@ -51,10 +59,12 @@ Available villagers and their roles:
 - maple: Scout — web research, writes notes + appends findings to bottle
 - zucker: Producer — reads Maple's notes, drafts the Final Output section in the bottle
 - marshal: Critic — reviews Zucker's draft, writes verdict to bottle (APPROVED or REVISION NEEDED)
+- piper: Narrator — reads the completed bottle, writes a warm closing story, updates her journal
 
 For writing tasks: summon maple first, then zucker to draft, then marshal to review.
 If marshal returns REVISION NEEDED, summon zucker again to revise based on the critique.
-Marshal may only reject once — if marshal reviews a second time, they must approve.`;
+Marshal may only reject once — if marshal reviews a second time, they must approve.
+After marshal approves (or after zucker's second revision), always summon piper last to close the task.`;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -120,6 +130,29 @@ Instructions:
 Follow CLAUDE.md rules. Be direct: "It's fine. It's almost fine. Here's what's wrong."`;
 }
 
+function buildPiperPrompt(paths: { bottle: string; taskId: string }): string {
+  const journalPath = path.join(JOURNAL_DIR, "piper.json");
+  return `You are Piper, a warm and observant bird villager on Nook Island. You are the island's storyteller and keeper of memories.
+
+Your files:
+- Bottle: ${paths.bottle}
+- Your journal: ${journalPath}
+
+Instructions:
+1. Read the completed bottle file — absorb the whole task journey.
+2. Append your section to the bottle under "## 🗺️ Journey":
+   - Heading: "### 🦜 Piper narrated"
+   - 3–5 warm sentences telling the story of this task (who did what, what was interesting, how the team worked)
+   - One quiet closing observation
+3. Read your journal at ${journalPath}. Then write the full updated JSON back:
+   - completedTasks: append { "taskId": "${paths.taskId}", "summary": "1 sentence on what happened" }
+   - userFacts: add anything new you learned about Jackson from this task
+   - relationships: note any notable moments between villagers you observed
+   Parse carefully, write valid JSON only. If the file is missing or unparseable, start fresh with the JournalFile schema.
+4. Do NOT touch the "## ✉️ Final Output" section.
+`;
+}
+
 /** Extract JSON plan from Sherb's result string. Tries direct parse, falls back to regex. */
 function parsePlan(raw: string): SherbPlan | null {
   try {
@@ -158,6 +191,24 @@ export async function runTwoStepSherb(
   const taskId = generateTaskId();
   const paths = getTaskPaths(taskId);
 
+  // Load Piper's island memory for Sherb's planning context
+  let islandMemory = "";
+  try {
+    const piperJournalPath = path.join(JOURNAL_DIR, "piper.json");
+    const raw = await fs.readFile(piperJournalPath, "utf-8");
+    const journal = JSON.parse(raw) as JournalFile;
+    const hasFacts = Object.keys(journal.userFacts).length > 0;
+    const hasTasks = journal.completedTasks.length > 0;
+    if (hasFacts || hasTasks) {
+      islandMemory = `\n\nIsland memory (from Piper's journal):\n${JSON.stringify(
+        { userFacts: journal.userFacts, relationships: journal.relationships },
+        null, 2
+      )}`;
+    }
+  } catch {
+    // journal missing or unparseable — proceed without memory
+  }
+
   await initBottleFile(taskId, description);
 
   const taskReceivedEvent = {
@@ -181,7 +232,7 @@ export async function runTwoStepSherb(
   for await (const message of query({
     prompt: description,
     options: {
-      systemPrompt: SHERB_PLAN_SYSTEM,
+      systemPrompt: SHERB_PLAN_SYSTEM + islandMemory,
       allowedTools: [], // no tools — pure reasoning
       maxTurns: 1,
       cwd: app.getAppPath(),
@@ -256,6 +307,8 @@ Pass them the bottle and notes file paths so they know where to write their outp
   // Track which agent is currently active (for PreToolUse hook agentId)
   let currentAgent = "sherb";
 
+  const agentPaths = { ...paths, taskId };
+
   for await (const message of query({
     prompt: execPrompt,
     options: {
@@ -282,6 +335,12 @@ Pass them the bottle and notes file paths so they know where to write their outp
             "Use Marshal to review Zucker's draft. He reads the bottle and appends APPROVED or REVISION NEEDED with specific critique.",
           tools: ["Read", "Write"],
           prompt: buildMarshalPrompt(paths),
+        },
+        piper: {
+          description:
+            "Use Piper to close the task with a warm narrative and update her journal.",
+          tools: ["Read", "Write"],
+          prompt: buildPiperPrompt(agentPaths),
         },
       },
       permissionMode: "dontAsk",
