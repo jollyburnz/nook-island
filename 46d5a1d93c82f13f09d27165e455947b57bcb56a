@@ -1,0 +1,23 @@
+PLANNING.md
+  99ec817f569d8509 6,940,1071-1082,1084-1089,1136,1138,1140-1146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "46d5a1d93c82f13f09d27165e455947b57bcb56a",
+  "prompts": {
+    "99ec817f569d8509": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04589c7a-9393-4ec6-b1ec-0b28dff6f0ca",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 110,
+      "total_deletions": 53,
+      "accepted_lines": 107,
+      "overriden_lines": 0
+    }
+  }
+}
