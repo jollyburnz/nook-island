@@ -20,6 +20,7 @@ import { Marshal } from "../villagers/Marshal";
 import { Piper } from "../villagers/Piper.js";
 import { Broccolo } from "../villagers/Broccolo.js";
 import { Lily } from "../villagers/Lily.js";
+import { Stitches } from "../villagers/Stitches.js";
 import type { Villager } from "../villagers/Villager";
 import type { Camera } from "../camera/Camera";
 
@@ -83,7 +84,8 @@ export class World extends PIXI.Container {
     const piper   = new Piper();
     const broccolo = new Broccolo();
     const lily = new Lily();
-    this.villagers = { sherb, maple, zucker, marshal, piper, broccolo, lily };
+    const stitches = new Stitches();
+    this.villagers = { sherb, maple, zucker, marshal, piper, broccolo, lily, stitches };
 
     for (const [name, v] of Object.entries(this.villagers)) {
       const distKey = VILLAGER_TO_DISTRICT[name];
