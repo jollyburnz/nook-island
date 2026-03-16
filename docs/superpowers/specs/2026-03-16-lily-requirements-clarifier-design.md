@@ -39,6 +39,8 @@ maple → [lily?] → zucker → marshal → piper → [broccolo?]
 
 When present, lily always runs after maple and before zucker. Zucker's prompt is unchanged — he simply reads the bottle and notes as normal, and Lily's requirements section will be there if she ran.
 
+**Revision loop:** If Marshal sends a revision back to Zucker, Lily does NOT re-run. Her brief is already in the bottle; Zucker re-reads it as part of the bottle and revises accordingly.
+
 ### What Lily writes
 
 Appends `### 🐸 Lily listened` to the bottle under `## 🗺️ Journey`:
@@ -80,9 +82,12 @@ Current district layout for reference:
 [library: 1120, 2400]    [cafe: 4000, 2400]
 ```
 
+**Known gap — no RiverDistrict chunk:** Adding `river` to `DISTRICT_POS` and `VILLAGER_TO_DISTRICT` is sufficient for the positioning loop to place Lily correctly. However, no `RiverDistrict` land chunk or `districtMap` entry is created in this sprint — Lily will stand on the ocean background with no land tile beneath her, and clicking her area won't focus the camera. A future task will add the proper terrain chunk and bridge. This is an accepted visual limitation for this sprint.
+
 ### Villager registration
 
 In `src/canvas/constants.ts`:
+- `DISTRICT_POS`: `river: { x: 2560, y: 480 }`
 - `VILLAGER_TO_DISTRICT`: `lily: "river"`
 - `VILLAGER_EMOJI`: `lily: "🐸"`
 - `COLORS`: `lily: 0x8db48e` (green — from PLANNING.md `#8DB48E`)
@@ -114,8 +119,8 @@ Uses `.js` extension imports (NodeNext ESM). PIXI namespace import included (mat
 - Import `Lily` from `"../villagers/Lily.js"`
 - Instantiate `const lily = new Lily()` after `const broccolo = new Broccolo()`
 - Add `lily` to `this.villagers = { sherb, maple, zucker, marshal, piper, broccolo, lily }`
-- Position override after the for-loop (no custom x/y offset needed — Lily is the only villager at river, so the loop's default district centering is fine): no override block needed unless fine-tuning
-- `baseY` cast not needed unless position is customized
+- No position override block needed — Lily is the sole occupant of `river`, so the for-loop places her at `DISTRICT_POS.river` center by default
+- The for-loop already applies the `baseY` cast to every villager generically — no additional cast needed for Lily
 
 ---
 
@@ -127,13 +132,12 @@ No new imports needed. All helpers (`fs`, `path`, `getDataDir`, `JournalFile`, `
 
 ### `buildLilyPrompt()`
 
-New function added after `buildMaplePrompt()`, before `buildZuckerPrompt()` (or wherever is cleanest):
+New function added after `buildMaplePrompt()` (group with the other `buildXPrompt` functions):
 
 ```typescript
 function buildLilyPrompt(paths: {
   bottle: string;
   notes: string;
-  taskId: string;
 }): string {
   const journalPath = path.join(JOURNAL_DIR, "lily.json");
   return `You are Lily, a gentle frog villager on Nook Island. You are the island's Listener — you hear what people really need beneath what they ask for.
@@ -153,27 +157,29 @@ Instructions:
    - **Success looks like:** what a good outcome does for the reader
    - **Constraints Zucker should know:** tone, length, format preferences, things to avoid
    - End with a 1-sentence handoff note: "Passing this brief to Zucker."
-4. Read your journal at ${journalPath}. Update userFacts with anything you noticed about Jackson's preferences or audience patterns, then write the complete JSON back (preserving all fields including completedTasks).
+4. Read your journal at ${journalPath}. Update the userFacts field with anything you noticed about Jackson's preferences or audience patterns, then write the COMPLETE JSON back (preserving all other fields exactly as-is, including completedTasks).
    If the file is missing or unparseable, start fresh: { villagerId: "lily", userFacts: {}, completedTasks: [], relationships: {}, baseline: null }.
 5. Do NOT touch "## ✉️ Final Output" or any other villager's journey section.
 `;
 }
 ```
 
+**Signature note:** `taskId` is NOT in the signature — Lily's prompt body doesn't use it. The call site passes `paths` directly (the `getTaskPaths()` return value: `{ bottle, notes, jsonl }`). TypeScript is happy because `paths` satisfies `{ bottle: string; notes: string }`.
+
 ### `SHERB_PLAN_SYSTEM` update
 
-Add `lily` to the available villagers list:
+Add `lily` to the available villagers list (after maple):
 ```
 lily (listener — include when the task is audience-specific, ambiguous in scope, or needs a clear brief before drafting)
 ```
 
-Add trigger guidance after the existing broccolo guidance:
+Add trigger guidance after the piper/broccolo instructions:
 ```
-Include lily between maple and zucker when the task involves a specific audience, requires persuasion/emotional tone, or has ambiguous scope where "what does Jackson actually need" isn't obvious.
+Include lily between maple and zucker when the task involves a specific audience, requires persuasion or emotional tone, or has ambiguous scope where "what does Jackson actually need" isn't obvious from the request alone.
 The "lily" step action should always be: "listen to what this task really needs and write a brief for Zucker".
 ```
 
-Add a 5-step JSON example with lily (alongside the existing 4-step and 5-step broccolo examples):
+Add a 5-step JSON example with lily (add alongside the existing 4-step default and 5-step broccolo examples):
 ```json
 {
   "task": "one sentence description",
@@ -194,9 +200,9 @@ Add lily bullet after maple:
 - lily: Listener — reads the task and Maple's notes, writes a clear requirements brief (audience, goal, constraints) for Zucker
 ```
 
-Update ordering instruction to acknowledge lily's position:
+Add to the ordering instruction:
 ```
-When lily is in the plan, she always runs after maple and before zucker.
+When lily is in the plan, she always runs after maple and before zucker. If marshal requests a revision, lily does NOT re-run — her brief remains in the bottle for Zucker to reference.
 ```
 
 ### `agents` map update
@@ -211,7 +217,7 @@ lily: {
 },
 ```
 
-Note: `buildLilyPrompt` takes `paths` (not `agentPaths`) — it only needs `bottle`, `notes`, and `taskId`, which are already in `paths`.
+**Call site:** `buildLilyPrompt(paths)` — passes the `paths` object from `getTaskPaths()` directly. `paths` contains `{ bottle, notes, jsonl }` which satisfies the `{ bottle: string; notes: string }` signature.
 
 No change to parent `allowedTools` — `["Agent", "Read", "Write", "WebSearch"]` already covers `Read` + `Write`.
 
@@ -221,11 +227,11 @@ No change to parent `allowedTools` — `["Agent", "Read", "Write", "WebSearch"]`
 
 | File | Change |
 |---|---|
-| `src/canvas/constants.ts` | Add `river` district; add `lily` to VILLAGER_TO_DISTRICT, VILLAGER_EMOJI, COLORS |
+| `src/canvas/constants.ts` | Add `river` to DISTRICT_POS; add `lily` to VILLAGER_TO_DISTRICT, VILLAGER_EMOJI, COLORS |
 | `src/components/WorkflowPanel.tsx` | Add `lily: "🐸"` to local emoji map |
 | `src/canvas/villagers/Lily.ts` | New file — green frog sprite |
-| `src/canvas/world/World.ts` | Import + instantiate + add to this.villagers |
-| `electron/orchestrator.ts` | buildLilyPrompt(), SHERB_PLAN_SYSTEM, SHERB_EXEC_SYSTEM, agents map |
+| `src/canvas/world/World.ts` | Import + instantiate + add to this.villagers (no position override needed) |
+| `electron/orchestrator.ts` | buildLilyPrompt(), SHERB_PLAN_SYSTEM update, SHERB_EXEC_SYSTEM update, agents map entry |
 
 ---
 
@@ -235,8 +241,9 @@ No change to parent `allowedTools` — `["Agent", "Read", "Write", "WebSearch"]`
 npm run dev
 ```
 
-1. Yellow 🐸 visible at top-center of canvas (river district, north of plaza)
+1. Green 🐸 visible at top-center of canvas (river district, north of plaza) — standing on ocean water (no land chunk yet, accepted for this sprint)
 2. Submit a task like "write an email to my producer about the next shoot" → Sherb's plan should include lily between maple and zucker
-3. Task completes → bottle has `### 🐸 Lily listened` section with requirements brief
-4. Zucker's draft should reflect Lily's audience/constraints
+3. Task completes → bottle has `### 🐸 Lily listened` section with requirements brief (audience, goal, constraints)
+4. Zucker's draft should reflect Lily's brief
 5. Submit a factual task ("summarise the history of Kodak") → Sherb's plan should NOT include lily (4-step default)
+6. TypeScript check: `npx tsc --project tsconfig.json --noEmit && npx tsc --project tsconfig.electron.json --noEmit` → zero errors on both
