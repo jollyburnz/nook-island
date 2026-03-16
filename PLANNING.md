@@ -1026,42 +1026,73 @@ No `outputs/` folder. The bottle IS the output. The mailbox opens `_bottle.md` d
 
 ```
 nook-island/
-├── CLAUDE.md                         ← auto-read by every subprocess
-├── PLANNING.md                       ← this file
+├── CLAUDE.md                              ← auto-injected into every agent subprocess
+├── PLANNING.md                            ← this file
 │
-├── electron/
-│   ├── main.js
-│   ├── preload.js
+├── electron/                              ← Electron main process (NodeNext ESM, .ts)
+│   ├── main.ts                            ← BrowserWindow, PATH fix, createWindow()
+│   ├── preload.cts                        ← .cts → compiles to .cjs (Electron requires CJS preload)
+│   ├── data.ts                            ← getDataDir(), initDataDir(), VILLAGERS, JournalFile
+│   ├── orchestrator.ts                    ← two-step Sherb, full villager pipeline, IPC events
+│   ├── agentTest.ts                       ← Layer 4/8 smoke test (NOOK_LAYER4_TEST=1)
 │   └── ipc/
-│       ├── handlers.js
-│       └── channels.js
+│       ├── handlers.ts                    ← TASK_SUBMIT → runTwoStepSherb; PLAN_APPROVE/REJECT
+│       └── channels.ts                    ← all IPC channel string constants
 │
-├── server/
-│   ├── orchestrator.js               ← two-step Sherb, task pipeline
-│   ├── villagers.js                  ← villager configs + tool scopes
-│   ├── prompts.js                    ← personality system prompts
-│   ├── journal.js                    ← file R/W + JSONL persistence
-│   └── bottle.js                     ← bottle creation + file paths
-│
-├── src/
+├── src/                                   ← Vite renderer (React + PixiJS, ESNext bundler)
+│   ├── index.html                         ← Vite root
+│   ├── main.tsx
+│   ├── App.tsx                            ← phase state machine (idle→plan→executing→complete)
+│   │
 │   ├── core/
-│   │   ├── eventBus.js
-│   │   └── bridge.js
-│   ├── world/
-│   │   ├── map.js
-│   │   ├── villagers.js
-│   │   └── renderer.js
-│   └── components/
-│       ├── WorkflowPanel.jsx
-│       ├── TownHall.jsx
-│       ├── Mailbox.jsx
-│       └── Canvas.jsx
+│   │   ├── types.ts                       ← IslandEvent union type
+│   │   ├── eventBus.ts                    ← typed mitt event bus
+│   │   └── bridge.ts                      ← IPC → eventBus adapter
+│   │
+│   ├── components/
+│   │   ├── TownHall.tsx                   ← task input form → submitTask()
+│   │   ├── PlanApproval.tsx               ← plan step list + Approve/Reject buttons
+│   │   └── WorkflowPanel.tsx              ← live agent nodes, ⚡ tool calls, cost badge
+│   │
+│   └── canvas/
+│       ├── constants.ts                   ← TILE, WORLD_W/H, DISTRICT_POS, VILLAGER_TO_DISTRICT,
+│       │                                     VILLAGER_EMOJI, COLORS
+│       ├── NookCanvas.tsx                 ← PixiJS app lifecycle, eventBus wiring
+│       │
+│       ├── camera/
+│       │   └── Camera.ts                  ← lerp pan, focusOn(key), screenPos(), isOnScreen()
+│       │
+│       ├── hud/
+│       │   └── IslandHUD.tsx              ← glass-card React overlay (zIndex 10)
+│       │
+│       ├── world/
+│       │   ├── World.ts                   ← root PIXI.Container; all districts + villagers
+│       │   ├── WaterTiles.ts              ← TilingSprite + shimmer
+│       │   └── CloudLayer.ts             ← 7 drifting clouds
+│       │
+│       ├── objects/
+│       │   ├── Bottle.ts                  ← district-to-district travel, cork-pop bounce
+│       │   ├── Mailbox.ts                 ← flag raise, gold glow, cost float
+│       │   └── OffscreenIndicator.ts      ← viewport-fixed arrow + emoji pill
+│       │
+│       └── villagers/
+│           ├── Villager.ts                ← abstract base: body Graphics, bob animation, baseY
+│           ├── Sherb.ts                   ← 🐐 blue goat (Town Hall)
+│           ├── Maple.ts                   ← 🐻 tan bear cub (forest)
+│           ├── Zucker.ts                  ← 🐙 octopus (library dock)
+│           ├── Marshal.ts                 ← 🐿️ squirrel (coffee shop)
+│           ├── Piper.ts                   ← 🐦 bird (plaza left of mailbox)
+│           └── Broccolo.ts                ← 🐛 caterpillar (plaza right of mailbox)
 │
-├── assets/
-│   └── icon.icns
-├── vite.config.js
-├── electron-builder.config.js
-└── package.json
+├── docs/
+│   └── superpowers/
+│       └── plans/                         ← implementation plan docs (one per sprint)
+│
+├── tsconfig.json                          ← renderer: ESNext/bundler, noEmit (Vite handles)
+├── tsconfig.electron.json                 ← main process: NodeNext/nodenext → dist-electron/
+├── vite.config.ts                         ← root: src/, port 5173, outDir: ../dist
+├── electron-builder.config.ts             ← appId, mac DMG arm64+x64
+└── package.json                           ← "type": "module" (ESM), concurrently dev scripts
 ```
 
 ---
@@ -1229,3 +1260,15 @@ The unpredictability is legible but never interrupts flow. Over time the player 
 | Mailbox action | Opens `_bottle.md` in default markdown editor |
 | Complementary files | `_notes.md` (raw research) + `.jsonl` (event stream) |
 | outputs/ folder | Removed — not needed |
+| Piper role | Narrator — always runs last; in-character closing narrative + updates her own journal |
+| Piper position | Plaza, 28px left of mailbox center |
+| Broccolo role | Data keeper — two layers: orchestrator auto-log (Layer 1) + optional agent analytics (Layer 2) |
+| Broccolo position | Plaza, 28px right of mailbox center (mirrors Piper) |
+| Broccolo spot | Changed from Lighthouse → Central Plaza — closer to mailbox; tracking is most relevant here |
+| Broccolo Layer 1 | Orchestrator writes `{ taskId, summary }` to `broccolo.json.completedTasks` after every `task_complete`, no AI |
+| Broccolo Layer 2 | When Sherb invites him: reads past 10 bottles, appends `### 🐛 Broccolo tracked` to bottle, updates `userFacts`/`relationships` only |
+| Broccolo optional | Sherb decides when to include Broccolo; triggered for analytical, recurring, or history-dependent tasks |
+| Broccolo + Piper ordering | Piper always closes the task; Broccolo always runs last when both are present |
+| Canvas engine | PixiJS v8 (upgraded from HTML5 Canvas plan); `unsafe-eval` CSP required for shader uniform generation |
+| ESM main process | `"type":"module"` — all electron/ imports use `.js` extensions; `__dirname` → `fileURLToPath` |
+| Preload CJS | `preload.cts` (not `.ts`) — compiles to `.cjs` regardless of package type; Electron requires CJS preload |
