@@ -157,6 +157,9 @@ Instructions:
 Follow CLAUDE.md rules. Keep your tone friendly and concise.`;
 }
 
+// NOTE: taskId intentionally excluded from signature — Lily runs mid-pipeline (after Maple,
+// before Zucker) and her prompt body does not use it. Consequently, completedTasks in lily.json
+// is never populated; Broccolo's system-level audit log covers task history for the island.
 function buildLilyPrompt(paths: { notes: string; bottle: string }): string {
   const journalPath = path.join(JOURNAL_DIR, "lily.json");
   return `You are Lily, a gentle frog villager on Nook Island. You are the island's Listener — you hear what people really need beneath what they ask for.
