@@ -13,6 +13,7 @@ const VILLAGER_EMOJI: Record<string, string> = {
   piper: "🦜",
   broccolo: "🐛",
   lily: "🐸",
+  stitches: "🧸",
 };
 
 type ToolCallEvent = Extract<IslandEvent, { type: "tool_call" }>;

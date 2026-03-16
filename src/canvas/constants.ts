@@ -9,16 +9,17 @@ export const DISTRICT_POS = {
   library:  { x: 1120, y: 2400 },
   cafe:     { x: 4000, y: 2400 },
   river:    { x: 2560, y: 480  },
+  artshed:  { x: 2560, y: 2880 },
 } as const;
 
 export type DistrictKey = keyof typeof DISTRICT_POS;
 
 export const VILLAGER_TO_DISTRICT: Record<string, DistrictKey> = {
-  sherb: "townhall", maple: "forest", zucker: "library", marshal: "cafe", piper: "plaza", broccolo: "plaza", lily: "river",
+  sherb: "townhall", maple: "forest", zucker: "library", marshal: "cafe", piper: "plaza", broccolo: "plaza", lily: "river", stitches: "artshed",
 };
 
 export const VILLAGER_EMOJI: Record<string, string> = {
-  sherb: "🐐", maple: "🐻", zucker: "🐙", marshal: "🐿️", piper: "🦜", broccolo: "🐛", lily: "🐸",
+  sherb: "🐐", maple: "🐻", zucker: "🐙", marshal: "🐿️", piper: "🦜", broccolo: "🐛", lily: "🐸", stitches: "🧸",
 };
 
 export const COLORS = {
@@ -37,6 +38,7 @@ export const COLORS = {
   piper:   0xffe066,
   broccolo: 0xf5c842,
   lily:    0x8db48e,
+  stitches: 0xf4a7b9,
   mailbox: 0xc0392b,
   bottle:  0x88ccff,
   cork:    0xc3b1e1,
