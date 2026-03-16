@@ -11,6 +11,7 @@ const VILLAGER_EMOJI: Record<string, string> = {
   marshal: "🐿️",
   sherb: "🐐",
   piper: "🦜",
+  broccolo: "🐛",
 };
 
 type ToolCallEvent = Extract<IslandEvent, { type: "tool_call" }>;
