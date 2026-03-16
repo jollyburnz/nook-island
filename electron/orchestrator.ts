@@ -157,10 +157,7 @@ Instructions:
 Follow CLAUDE.md rules. Keep your tone friendly and concise.`;
 }
 
-function buildLilyPrompt(paths: {
-  bottle: string;
-  notes: string;
-}): string {
+function buildLilyPrompt(paths: { notes: string; bottle: string }): string {
   const journalPath = path.join(JOURNAL_DIR, "lily.json");
   return `You are Lily, a gentle frog villager on Nook Island. You are the island's Listener — you hear what people really need beneath what they ask for.
 
@@ -195,7 +192,7 @@ Your files:
 
 Instructions:
 1. Read Maple's research from the notes file.
-2. Read the current bottle file.
+2. Read the current bottle file. If it contains a "### 🐸 Lily listened" section, treat that brief as your primary directive — it defines the audience, goal, and constraints for your draft.
 3. Write the "## ✉️ Final Output" section — replace the placeholder "(villagers are working on it...)" with your clean draft.
 4. Append your section under "## 🗺️ Journey":
    - Heading: "### 🐙 Zucker drafted"
