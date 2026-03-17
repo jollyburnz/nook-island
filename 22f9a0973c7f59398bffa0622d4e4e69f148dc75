@@ -1,0 +1,27 @@
+docs/mcp-setup.md
+  99ec817f569d8509 114-116,118-121,156
+electron/data.ts
+  99ec817f569d8509 68-84
+electron/orchestrator.ts
+  99ec817f569d8509 24,355-356,545,611
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "22f9a0973c7f59398bffa0622d4e4e69f148dc75",
+  "prompts": {
+    "99ec817f569d8509": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04589c7a-9393-4ec6-b1ec-0b28dff6f0ca",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "jollyburnz <j@cksonl.in>",
+      "messages": [],
+      "total_additions": 34,
+      "total_deletions": 19,
+      "accepted_lines": 32,
+      "overriden_lines": 0
+    }
+  }
+}
