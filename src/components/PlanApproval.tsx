@@ -13,6 +13,10 @@ const VILLAGER_EMOJI: Record<string, string> = {
   zucker: "🐙",
   marshal: "🐿️",
   sherb: "🐐",
+  piper: "🦜",
+  broccolo: "🐛",
+  lily: "🐸",
+  stitches: "🧸",
 };
 
 interface Props {
