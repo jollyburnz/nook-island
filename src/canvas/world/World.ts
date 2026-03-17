@@ -11,6 +11,8 @@ import { ForestDistrict } from "./districts/ForestDistrict";
 import { LibraryDistrict } from "./districts/LibraryDistrict";
 import { CafeDistrict } from "./districts/CafeDistrict";
 import { CentralPlaza } from "./districts/CentralPlaza";
+import { RiverDistrict } from "./districts/RiverDistrict";
+import { ArtshedDistrict } from "./districts/ArtshedDistrict";
 import { Bottle } from "../objects/Bottle";
 import { Mailbox } from "../objects/Mailbox";
 import { Sherb } from "../villagers/Sherb";
@@ -57,6 +59,8 @@ export class World extends PIXI.Container {
     const forest = new ForestDistrict();
     const library = new LibraryDistrict();
     const cafe = new CafeDistrict();
+    const river = new RiverDistrict();
+    const artshed = new ArtshedDistrict();
 
     this.districtMap = new Map([
       ["plaza",    plaza],
@@ -64,6 +68,8 @@ export class World extends PIXI.Container {
       ["forest",   forest],
       ["library",  library],
       ["cafe",     cafe],
+      ["river",    river],
+      ["artshed",  artshed],
     ]);
 
     for (const [key, chunk] of this.districtMap) {
