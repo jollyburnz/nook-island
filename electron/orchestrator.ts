@@ -40,6 +40,7 @@ const CALENDAR_MCP = {
   args: ["-y", "@cocal/google-calendar-mcp"],
   env: {
     GOOGLE_OAUTH_CREDENTIALS: path.join(CREDENTIALS_DIR, "calendar-oauth.json"),
+    GOOGLE_CALENDAR_MCP_TOKEN_PATH: path.join(CREDENTIALS_DIR, "calendar-tokens.json"),
     ENABLED_TOOLS: "list-events,search-events,get-current-time",
   },
 };

@@ -41,11 +41,12 @@ Place your `calendar-oauth.json` credentials file first (see step 3 of the Calen
 
 ```bash
 GOOGLE_OAUTH_CREDENTIALS=~/Library/Application\ Support/NookIsland/credentials/calendar-oauth.json \
+GOOGLE_CALENDAR_MCP_TOKEN_PATH=~/Library/Application\ Support/NookIsland/credentials/calendar-tokens.json \
   npx -y @cocal/google-calendar-mcp
 ```
 
 A browser opens → sign in with your Google account → grant Calendar access → press `Ctrl+C` when done.
-Tokens are cached at `~/.config/google-calendar-mcp/tokens.json` and reused on every subsequent launch.
+Tokens are cached at `credentials/calendar-tokens.json` and reused on every subsequent launch.
 
 ### 2. Authenticate Gmail (one-time)
 
