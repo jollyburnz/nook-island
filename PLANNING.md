@@ -3,7 +3,7 @@
 > A cozy Animal Crossing-style productivity tool powered by AI agents.
 > Every decision made in the planning phase is recorded here.
 > This is the source of truth — not the chat history.
-> Last updated: 2026-03-16 — Broccolo (data keeper) + Piper (narrator) shipped; all 12 build layers complete
+> Last updated: 2026-03-16 — Lily & Stitches district homes added; all 8 villagers have canvas land chunks
 
 ---
 
@@ -1122,6 +1122,9 @@ All 12 core layers are ✅ COMPLETE. Layer 10 (MCP) explicitly skipped for v1 �
 |---|---|---|
 | Piper (Narrator) | 🐦 Bird sprite at plaza; closes every task with narrative + updates journal | ✅ Shipped |
 | Broccolo (Data Keeper) | 🐛 Caterpillar sprite at plaza; two-layer tracking (see below) | ✅ Shipped |
+| Lily (Listener) | 🐸 Frog sprite at river; mid-pipeline requirements clarifier; writes brief for Zucker | ✅ Shipped |
+| Stitches (Ideator) | 🧸 Patchwork bear at art shed; runs first (before Maple) to brainstorm creative angles | ✅ Shipped |
+| District Homes | RiverDistrict (Lily — sage green cottage + pond) and ArtshedDistrict (Stitches — patchwork shed + easel); all 8 villagers now have canvas land chunks | ✅ Shipped |
 
 **Broccolo's two-layer tracking:**
 - **Layer 1 (always-on, no AI):** Orchestrator auto-appends `{ taskId, summary }` to `broccolo.json` after every successful task_complete — runs even when Broccolo wasn't in the plan
