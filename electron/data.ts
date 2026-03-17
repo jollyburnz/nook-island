@@ -65,3 +65,20 @@ export async function initDataDir(): Promise<void> {
 
   console.log(`[data] data dir ready: ${base}`);
 }
+
+// ── Island config ─────────────────────────────────────────────────────────────
+
+export type NookConfig = {
+  sheetsId?: string;
+};
+
+/** Read ~/Library/Application Support/NookIsland/config.json. Returns {} if missing. */
+export async function getNookConfig(): Promise<NookConfig> {
+  const configPath = path.join(getDataDir(), "config.json");
+  try {
+    const raw = await fs.readFile(configPath, "utf-8");
+    return JSON.parse(raw) as NookConfig;
+  } catch {
+    return {};
+  }
+}

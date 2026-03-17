@@ -21,7 +21,7 @@ import {
 } from "./tasks.js";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { getDataDir } from "./data.js";
+import { getDataDir, getNookConfig } from "./data.js";
 import type { JournalFile } from "./data.js";
 
 const JOURNAL_DIR = path.join(getDataDir(), "journals");
@@ -351,16 +351,14 @@ Instructions:
 `;
 }
 
-function buildBroccoloPrompt(paths: {
-  bottle: string;
-  taskId: string;
-  pastBottles: string[];
-}): string {
+function buildBroccoloPrompt(
+  paths: { bottle: string; taskId: string; pastBottles: string[] },
+  sheetsId: string,
+): string {
   const journalPath = path.join(JOURNAL_DIR, "broccolo.json");
   const pastList = paths.pastBottles.length > 0
     ? paths.pastBottles.map(p => `- ${p}`).join("\n")
     : "(no past tasks yet)";
-  const sheetsId = process.env.NOOK_SHEETS_ID ?? "";
   const sheetsNote = MCP_ENABLED && sheetsId
     ? `\n\n**Google Sheets sync (mcp__sheets__read_sheet, mcp__sheets__write_sheet):** After writing to your local journal, append one summary row to spreadsheet ID "${sheetsId}", sheet name "Task Log". Row columns: [ISO date, taskId, task description (≤50 chars), villagers used (comma-separated, from the bottle's Journey headings)]. If Sheets fails, note "⚠️ sheets sync failed" in your journey section and proceed — local journal is the source of truth.`
     : "";
@@ -544,6 +542,7 @@ Pass them the bottle and notes file paths so they know where to write their outp
 
   const pastBottlePaths = await getPastBottles(taskId, 10);
   const agentPaths = { ...paths, taskId, pastBottles: pastBottlePaths };
+  const config = await getNookConfig();
 
   for await (const message of query({
     prompt: execPrompt,
@@ -609,7 +608,7 @@ Pass them the bottle and notes file paths so they know where to write their outp
             "Use Broccolo to archive the completed task and identify patterns from recent task history. Summon after Piper when the task is analytical, recurring, or when historical patterns would add value.",
           tools: ["Read", "Write", ...(MCP_ENABLED ? ["mcp__sheets__read_sheet", "mcp__sheets__write_sheet"] : [])],
           mcpServers: MCP_ENABLED ? ["sheets"] : undefined,
-          prompt: buildBroccoloPrompt(agentPaths),
+          prompt: buildBroccoloPrompt(agentPaths, config.sheetsId ?? ""),
         },
       },
       permissionMode: "dontAsk",

@@ -111,11 +111,14 @@ Credentials are written to `gmail-credentials.json` and reused on every subseque
    ~/Library/Application Support/NookIsland/credentials/sheets-service-account.json
    ```
 4. Create a Google Sheet for your task log → share it with the Service Account email (from the JSON key, field `client_email`)
-5. Set the Sheet ID env var (found in the Google Sheets URL):
-   ```bash
-   export NOOK_SHEETS_ID=1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms
+5. Add the Sheet ID to your island config file. Create (or edit) this file:
    ```
-   Add this to your shell profile or set it in the Electron launch command.
+   ~/Library/Application Support/NookIsland/config.json
+   ```
+   ```json
+   { "sheetsId": "YOUR_SHEET_ID_HERE" }
+   ```
+   The Sheet ID is the long string in your Google Sheets URL between `/d/` and `/edit`.
 
 **Expected sheet structure (Broccolo auto-creates rows):**
 
@@ -145,16 +148,12 @@ Credentials are written to `gmail-credentials.json` and reused on every subseque
 NOOK_MCP_ENABLED=1 npm run dev
 ```
 
-### With Sheets ID
-```bash
-NOOK_MCP_ENABLED=1 NOOK_SHEETS_ID=<your-sheet-id> npm run dev
-```
-
 ### Permanent (add to your shell profile)
 ```bash
 echo 'export NOOK_MCP_ENABLED=1' >> ~/.zshrc
-echo 'export NOOK_SHEETS_ID=<your-sheet-id>' >> ~/.zshrc
 ```
+
+The Sheet ID lives in `config.json` — no env var needed for that.
 
 ---
 
