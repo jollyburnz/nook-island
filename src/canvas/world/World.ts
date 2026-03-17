@@ -63,13 +63,13 @@ export class World extends PIXI.Container {
     const artshed = new ArtshedDistrict();
 
     this.districtMap = new Map([
-      ["plaza",    plaza],
+      ["plaza", plaza],
       ["townhall", townhall],
-      ["forest",   forest],
-      ["library",  library],
-      ["cafe",     cafe],
-      ["river",    river],
-      ["artshed",  artshed],
+      ["forest", forest],
+      ["library", library],
+      ["cafe", cafe],
+      ["river", river],
+      ["artshed", artshed],
     ]);
 
     for (const [key, chunk] of this.districtMap) {
@@ -83,11 +83,11 @@ export class World extends PIXI.Container {
     this.mailbox = plaza.mailbox;
 
     // 5. Villagers at their district positions + y offset
-    const sherb   = new Sherb();
-    const maple   = new Maple();
-    const zucker  = new Zucker();
+    const sherb = new Sherb();
+    const maple = new Maple();
+    const zucker = new Zucker();
     const marshal = new Marshal();
-    const piper   = new Piper();
+    const piper = new Piper();
     const broccolo = new Broccolo();
     const lily = new Lily();
     const stitches = new Stitches();
@@ -206,6 +206,8 @@ export class World extends PIXI.Container {
       ["plaza", "forest"],
       ["plaza", "library"],
       ["plaza", "cafe"],
+      ["plaza", "river"],
+      ["plaza", "artshed"],
     ];
 
     for (const [a, b] of pairs) {
@@ -223,19 +225,19 @@ export class World extends PIXI.Container {
       const x1 = bx - ux * TRIM, y1 = by - uy * TRIM;
 
       g.moveTo(x0 + px * hw, y0 + py * hw)
-       .lineTo(x1 + px * hw, y1 + py * hw)
-       .lineTo(x1 - px * hw, y1 - py * hw)
-       .lineTo(x0 - px * hw, y0 - py * hw)
-       .closePath()
-       .fill(COLORS.bridge);
+        .lineTo(x1 + px * hw, y1 + py * hw)
+        .lineTo(x1 - px * hw, y1 - py * hw)
+        .lineTo(x0 - px * hw, y0 - py * hw)
+        .closePath()
+        .fill(COLORS.bridge);
 
       // Edge planks for visual detail
       g.moveTo(x0 + px * hw, y0 + py * hw)
-       .lineTo(x1 + px * hw, y1 + py * hw)
-       .stroke({ color: 0x8b6340, width: 2, alpha: 0.5 });
+        .lineTo(x1 + px * hw, y1 + py * hw)
+        .stroke({ color: 0x8b6340, width: 2, alpha: 0.5 });
       g.moveTo(x0 - px * hw, y0 - py * hw)
-       .lineTo(x1 - px * hw, y1 - py * hw)
-       .stroke({ color: 0x8b6340, width: 2, alpha: 0.5 });
+        .lineTo(x1 - px * hw, y1 - py * hw)
+        .stroke({ color: 0x8b6340, width: 2, alpha: 0.5 });
     }
     this.addChild(g);
   }
