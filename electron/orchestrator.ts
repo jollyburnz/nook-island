@@ -20,6 +20,7 @@ import {
   appendTaskEvent,
 } from "./tasks.js";
 import fs from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { getDataDir, getNookConfig } from "./data.js";
 import type { JournalFile } from "./data.js";
@@ -54,13 +55,28 @@ const GMAIL_MCP = {
   },
 };
 
-const SHEETS_MCP = {
-  command: "npx",
-  args: ["-y", "mcp-gsheets"],
-  env: {
-    SERVICE_ACCOUNT_PATH: path.join(CREDENTIALS_DIR, "sheets-service-account.json"),
-  },
-};
+// Read project_id directly from service account JSON so the user doesn't
+// need to set GOOGLE_PROJECT_ID separately — it's already in the key file.
+function buildSheetsMCP() {
+  const keyPath = path.join(CREDENTIALS_DIR, "sheets-service-account.json");
+  let projectId = "";
+  try {
+    const sa = JSON.parse(readFileSync(keyPath, "utf-8")) as { project_id?: string };
+    projectId = sa.project_id ?? "";
+  } catch {
+    /* file missing at module load — MCP will fail gracefully at runtime */
+  }
+  return {
+    command: "npx",
+    args: ["-y", "mcp-gsheets"],
+    env: {
+      GOOGLE_APPLICATION_CREDENTIALS: keyPath,
+      ...(projectId ? { GOOGLE_PROJECT_ID: projectId } : {}),
+    },
+  };
+}
+
+const SHEETS_MCP = buildSheetsMCP();
 
 const FETCH_MCP = {
   command: "uvx",
@@ -260,7 +276,7 @@ ${fetchNote}`;
 function buildLilyPrompt(paths: { notes: string; bottle: string }): string {
   const journalPath = path.join(JOURNAL_DIR, "lily.json");
   const gmailNote = MCP_ENABLED
-    ? `\n\n**Gmail access (mcp__gmail__search_messages, mcp__gmail__read_messages):** Before writing your brief, search Gmail for emails related to this task — try keywords from the task description (subject, sender, project name). If you find a relevant client thread or brief, extract key context and weave it into your brief. If Gmail is unavailable, note "⚠️ inbox unavailable" in your journey section and continue without it.`
+    ? `\n\n**Gmail access (mcp__gmail__search_emails, mcp__gmail__read_email):** Before writing your brief, search Gmail for emails related to this task — try keywords from the task description (subject, sender, project name). If you find a relevant client thread or brief, read it and extract key context to weave into your brief. If Gmail is unavailable, note "⚠️ inbox unavailable" in your journey section and continue without it.`
     : "";
   return `You are Lily, a gentle frog villager on Nook Island. You are the island's Listener — you hear what people really need beneath what they ask for.
 
@@ -360,7 +376,7 @@ function buildBroccoloPrompt(
     ? paths.pastBottles.map(p => `- ${p}`).join("\n")
     : "(no past tasks yet)";
   const sheetsNote = MCP_ENABLED && sheetsId
-    ? `\n\n**Google Sheets sync (mcp__sheets__read_sheet, mcp__sheets__write_sheet):** After writing to your local journal, append one summary row to spreadsheet ID "${sheetsId}", sheet name "Task Log". Row columns: [ISO date, taskId, task description (≤50 chars), villagers used (comma-separated, from the bottle's Journey headings)]. If Sheets fails, note "⚠️ sheets sync failed" in your journey section and proceed — local journal is the source of truth.`
+    ? `\n\n**Google Sheets sync (mcp__sheets__sheets_append_values):** After writing to your local journal, append one summary row to spreadsheet ID "${sheetsId}", sheet name "Task Log", range "Task Log!A:D". Row values: [ISO date, taskId, task description (≤50 chars), villagers used (comma-separated, from the bottle's Journey headings)]. Use valueInputOption "RAW". If Sheets fails, note "⚠️ sheets sync failed" in your journey section and proceed — local journal is the source of truth.`
     : "";
   return `You are Broccolo, a methodical caterpillar villager on Nook Island. You are the island's tracker — you find patterns, measure state over time, and keep careful records.
 
@@ -553,16 +569,16 @@ Pass them the bottle and notes file paths so they know where to write their outp
         // MCP tools for subagents — parent allowedTools gates all subagent tool calls.
         // Only present when MCP_ENABLED; gated here so non-MCP mode has zero overhead.
         ...(MCP_ENABLED ? [
-          "mcp__gmail__search_messages", "mcp__gmail__read_messages",
-          "mcp__sheets__read_sheet", "mcp__sheets__write_sheet",
+          "mcp__gmail__search_emails", "mcp__gmail__read_email",
+          "mcp__sheets__sheets_get_values", "mcp__sheets__sheets_append_values",
           "mcp__fetch__fetch",
         ] : []),
       ],
       // Define all MCP servers once at the parent level; agents reference by name string.
       mcpServers: MCP_ENABLED ? {
-        gmail:  GMAIL_MCP,
+        gmail: GMAIL_MCP,
         sheets: SHEETS_MCP,
-        fetch:  FETCH_MCP,
+        fetch: FETCH_MCP,
       } : undefined,
       agents: {
         stitches: {
@@ -581,7 +597,7 @@ Pass them the bottle and notes file paths so they know where to write their outp
         lily: {
           description:
             "Use Lily when the task is audience-specific, ambiguous in scope, or needs a requirements brief before Zucker drafts. She translates Maple's research into a clear 'what does Jackson actually need' brief. Run after Maple, before Zucker.",
-          tools: ["Read", "Write", ...(MCP_ENABLED ? ["mcp__gmail__search_messages", "mcp__gmail__read_messages"] : [])],
+          tools: ["Read", "Write", ...(MCP_ENABLED ? ["mcp__gmail__search_emails", "mcp__gmail__read_email"] : [])],
           mcpServers: MCP_ENABLED ? ["gmail"] : undefined,
           prompt: buildLilyPrompt(paths),
         },
@@ -606,14 +622,14 @@ Pass them the bottle and notes file paths so they know where to write their outp
         broccolo: {
           description:
             "Use Broccolo to archive the completed task and identify patterns from recent task history. Summon after Piper when the task is analytical, recurring, or when historical patterns would add value.",
-          tools: ["Read", "Write", ...(MCP_ENABLED ? ["mcp__sheets__read_sheet", "mcp__sheets__write_sheet"] : [])],
+          tools: ["Read", "Write", ...(MCP_ENABLED ? ["mcp__sheets__sheets_get_values", "mcp__sheets__sheets_append_values"] : [])],
           mcpServers: MCP_ENABLED ? ["sheets"] : undefined,
           prompt: buildBroccoloPrompt(agentPaths, config.sheetsId ?? ""),
         },
       },
       permissionMode: "dontAsk",
       maxTurns: 30,
-      maxBudgetUsd: 1.0,
+      maxBudgetUsd: 2.0,
       cwd: app.getAppPath(),
       settingSources: ["project"],
       hooks: {
@@ -642,9 +658,9 @@ Pass them the bottle and notes file paths so they know where to write their outp
             const realTools = [
               "WebSearch",
               ...(MCP_ENABLED ? [
-                "mcp__gmail__search_messages", "mcp__gmail__read_messages",
+                "mcp__gmail__search_emails", "mcp__gmail__read_email",
                 "mcp__calendar__list-events", "mcp__calendar__search-events", "mcp__calendar__get-current-time",
-                "mcp__sheets__read_sheet", "mcp__sheets__write_sheet",
+                "mcp__sheets__sheets_get_values", "mcp__sheets__sheets_append_values",
                 "mcp__fetch__fetch",
               ] : []),
             ];

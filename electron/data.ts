@@ -74,7 +74,7 @@ export type NookConfig = {
 
 /** Read ~/Library/Application Support/NookIsland/config.json. Returns {} if missing. */
 export async function getNookConfig(): Promise<NookConfig> {
-  const configPath = path.join(getDataDir(), "config.json");
+  const configPath = path.join(getDataDir(), "credentials", "config.json");
   try {
     const raw = await fs.readFile(configPath, "utf-8");
     return JSON.parse(raw) as NookConfig;
