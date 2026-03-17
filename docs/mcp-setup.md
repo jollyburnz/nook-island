@@ -29,6 +29,39 @@ mkdir -p ~/Library/Application\ Support/NookIsland/credentials/
 
 ---
 
+## Pre-Auth Setup (run once from terminal — required for Calendar and Gmail)
+
+> **Why this is necessary:** When Nook Island spawns Google Calendar or Gmail MCP servers during a task, the Claude Agent SDK expects the MCP protocol handshake to complete within seconds. If no cached OAuth token exists, the package blocks on the browser login flow first — the SDK times out before auth completes, the villager gracefully falls back to `⚠️ unavailable`, and **the token is never saved**. You must authenticate once from a terminal so the token is on disk before the app ever spawns the server.
+>
+> This is **only** required for Calendar and Gmail. Sheets uses a Service Account key (no browser, no timeout risk). Fetch has no auth at all.
+
+### 1. Authenticate Calendar (one-time)
+
+Place your `calendar-oauth.json` credentials file first (see step 3 of the Calendar section below), then run from terminal:
+
+```bash
+GOOGLE_OAUTH_CREDENTIALS=~/Library/Application\ Support/NookIsland/credentials/calendar-oauth.json \
+  npx -y @cocal/google-calendar-mcp
+```
+
+A browser opens → sign in with your Google account → grant Calendar access → press `Ctrl+C` when done.
+Tokens are cached at `~/.config/google-calendar-mcp/tokens.json` and reused on every subsequent launch.
+
+### 2. Authenticate Gmail (one-time)
+
+Place your `gmail-oauth.keys.json` credentials file first (see step 3 of the Gmail section below), then run from terminal:
+
+```bash
+GMAIL_OAUTH_PATH=~/Library/Application\ Support/NookIsland/credentials/gmail-oauth.keys.json \
+GMAIL_CREDENTIALS_PATH=~/Library/Application\ Support/NookIsland/credentials/gmail-credentials.json \
+  npx -y @gongrzhe/server-gmail-autoauth-mcp
+```
+
+A browser opens → sign in → grant Gmail read access → press `Ctrl+C` when done.
+Credentials are written to `gmail-credentials.json` and reused on every subsequent launch.
+
+---
+
 ## 1. Google Calendar (Sherb)
 
 **Package:** `@cocal/google-calendar-mcp`
@@ -41,7 +74,7 @@ mkdir -p ~/Library/Application\ Support/NookIsland/credentials/
    ```
    ~/Library/Application Support/NookIsland/credentials/calendar-oauth.json
    ```
-5. On first run the package opens a browser for Google sign-in. Tokens are cached automatically.
+5. Run the one-time terminal pre-auth step in the **Pre-Auth Setup** section above before using the app.
 
 ---
 
@@ -61,7 +94,7 @@ mkdir -p ~/Library/Application\ Support/NookIsland/credentials/
    ~/Library/Application Support/NookIsland/credentials/gmail-credentials.json
    ```
    (this file is auto-created on first auth)
-5. On first run a browser window opens for Gmail authorization.
+5. Run the one-time terminal pre-auth step in the **Pre-Auth Setup** section above before using the app.
 
 ---
 
@@ -134,7 +167,7 @@ If any MCP server is unavailable (not installed, auth expired, network issue), t
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Calendar/Gmail browser auth doesn't open | npx cache issue | Run `npx -y @cocal/google-calendar-mcp` manually once |
+| Calendar or Gmail shows `⚠️ unavailable` on first run | OAuth must be pre-authenticated from terminal | Complete the **Pre-Auth Setup** steps above before running the app with `NOOK_MCP_ENABLED=1` |
 | `uvx: command not found` | uv not installed | Run the uv install script above |
 | Sheets write fails | Service account not shared on the sheet | Share the sheet with the `client_email` from your service account JSON |
 | Lily searches Gmail but finds nothing | Search terms too broad/specific | Lily uses keywords from the task description — be specific in the task prompt |
