@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { District } from "./District.js";
+import { District } from "./District";
 
 export class RiverDistrict extends District {
   constructor() {
