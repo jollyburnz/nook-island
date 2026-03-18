@@ -1,0 +1,37 @@
+src/components/PlanApproval.tsx
+  50c3bc590d4af839 41,44,57,70-73,76-78,87-90,93-95
+src/canvas/villagers/Villager.ts
+  50c3bc590d4af839 2-3,22-26
+src/canvas/hud/IslandHUD.tsx
+  50c3bc590d4af839 20,22-26,57,102,127
+src/components/TownHall.tsx
+  50c3bc590d4af839 19,32-33,37,39,43,49-53,55-56
+src/components/WorkflowPanel.tsx
+  50c3bc590d4af839 51,55-61,68-70,72,74-78,85-86,89-90,92,96-101,103,106-124,126-127,132-136,138,141-143
+src/canvas/filters/PixelateFilter.ts
+  50c3bc590d4af839 1-50
+src/canvas/NookCanvas.tsx
+  50c3bc590d4af839 3,57-67
+src/index.html
+  50c3bc590d4af839 8,10-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "0c822674bd0f15ad52ab17cf68a181f0cefab227",
+  "prompts": {
+    "50c3bc590d4af839": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb681d2e-001d-42ca-8a77-d17d8c97a352",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "jollyburnz <j@cksonl.in>",
+      "messages": [],
+      "total_additions": 199,
+      "total_deletions": 109,
+      "accepted_lines": 171,
+      "overriden_lines": 0
+    }
+  }
+}
