@@ -1,4 +1,6 @@
 import * as PIXI from "pixi.js";
+import { ColorMatrixFilter } from "pixi.js";
+import { PixelateFilter } from "../filters/PixelateFilter.js";
 
 export abstract class Villager extends PIXI.Container {
   protected body = new PIXI.Graphics();
@@ -17,6 +19,11 @@ export abstract class Villager extends PIXI.Container {
     this.drawBody();
     this.drawThinkBubble();
     this.thinkBubble.visible = false;
+    // Criterion Cozy: pixelate + warm tint stacked on the body Graphics
+    const warmTint = new ColorMatrixFilter();
+    warmTint.tint(0xfff3d0, false); // amber-cream tint, multiply mode
+    warmTint.saturate(-0.18, false); // slight desaturation — the "film restoration" quality
+    this.body.filters = [new PixelateFilter(3), warmTint];
   }
 
   abstract drawBody(): void;

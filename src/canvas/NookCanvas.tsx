@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import * as PIXI from "pixi.js";
+import { ColorMatrixFilter, NoiseFilter } from "pixi.js";
 import { eventBus } from "../core/eventBus";
 import type { IslandEvent } from "../core/types";
 import { World } from "./world/World";
@@ -52,6 +53,17 @@ export function NookCanvas() {
       app.stage.addChild(world);
       app.stage.addChild(world.cloudLayer);
       app.stage.addChild(indicator);
+
+      // ── Criterion Cozy: world-level grain + warm tint ──────────────────────
+      // Applied to `world` only — clouds and indicator stay clean
+      const worldWarm = new ColorMatrixFilter();
+      worldWarm.tint(0xfff8e7, false);  // Cream Press warm tint
+      worldWarm.saturate(-0.12, false); // mild desaturation
+      const grain = new NoiseFilter({ noise: 0.055, seed: Math.random() });
+      world.filters = [worldWarm, grain];
+
+      // Animate grain seed each frame so it feels like real film grain
+      app.ticker.add(() => { grain.seed = Math.random(); });
 
       // Wire district clicks to camera
       world.wireClicks(camera);

@@ -38,10 +38,10 @@ export function PlanApproval({ plan, onApprove, onReject }: Props) {
 
   return (
     <div style={{ width: "100%" }}>
-      <h2 style={{ margin: "0 0 4px", fontSize: 18, color: "#2d5a3d" }}>
+      <h2 style={{ margin: "0 0 4px", fontSize: 18, color: "#3d4e3c", fontWeight: 800 }}>
         🐐 Sherb&apos;s Plan
       </h2>
-      <p style={{ margin: "0 0 16px", fontSize: 13, opacity: 0.7, color: "#2d5a3d" }}>
+      <p style={{ margin: "0 0 16px", fontSize: 13, opacity: 0.7, color: "#3d4e3c" }}>
         {plan.task}
       </p>
       <ol
@@ -54,7 +54,7 @@ export function PlanApproval({ plan, onApprove, onReject }: Props) {
         }}
       >
         {plan.steps.map((step, i) => (
-          <li key={i} style={{ fontSize: 14, color: "#2d5a3d" }}>
+          <li key={i} style={{ fontSize: 14, color: "#2b2b26" }}>
             <strong>
               {VILLAGER_EMOJI[step.villager] ?? "🏝️"} {step.villager}
             </strong>{" "}
@@ -67,11 +67,15 @@ export function PlanApproval({ plan, onApprove, onReject }: Props) {
           onClick={() => void handleReject()}
           style={{
             padding: "8px 16px",
-            borderRadius: 8,
-            border: "2px solid #ccc",
-            background: "#fff",
+            borderRadius: 6,
+            border: "2px solid #2b2b26",
+            background: "#d8ccb6",       // Parchment
+            color: "#2b2b26",
             cursor: "pointer",
             fontSize: 13,
+            fontWeight: 600,
+            fontFamily: "inherit",
+            boxShadow: "2px 2px 0 #2b2b26",
           }}
         >
           Reject
@@ -80,12 +84,15 @@ export function PlanApproval({ plan, onApprove, onReject }: Props) {
           onClick={() => void handleApprove()}
           style={{
             padding: "8px 16px",
-            borderRadius: 8,
-            background: "#2d5a3d",
-            color: "#fff",
-            border: "none",
+            borderRadius: 6,
+            background: "#3d4e3c",
+            color: "#fff8e7",
+            border: "2px solid #2b2b26",
             cursor: "pointer",
             fontSize: 13,
+            fontWeight: 700,
+            fontFamily: "inherit",
+            boxShadow: "2px 2px 0 #2b2b26",
           }}
         >
           Approve →
