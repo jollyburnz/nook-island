@@ -17,13 +17,13 @@ interface Props {
   onReset: () => void;
 }
 
+// Criterion Cozy — kraft card: warm parchment, ink border, hard offset shadow
 const glass: CSSProperties = {
-  background: "rgba(255, 255, 255, 0.88)",
-  backdropFilter: "blur(12px)",
-  WebkitBackdropFilter: "blur(12px)",
-  borderRadius: 16,
-  boxShadow: "0 8px 32px rgba(0,0,0,0.20)",
-  border: "1.5px solid rgba(255,255,255,0.65)",
+  background: "#fff8e7",          // Cream Press
+  borderRadius: 8,
+  border: "2px solid #2b2b26",   // Ink
+  boxShadow: "4px 4px 0 #2b2b26",
+  fontFamily: "'Nunito', 'Rubik', system-ui, sans-serif",
 };
 
 // Centered modal cards (idle, plan-proposed, error)
@@ -54,7 +54,7 @@ export function IslandHUD({
         alignItems: "center",
         justifyContent: "center",
         pointerEvents: "none",
-        fontFamily: "system-ui, sans-serif",
+        fontFamily: "'Nunito', 'Rubik', system-ui, sans-serif",
       }}
     >
       {/* Idle: centered task input */}
@@ -99,7 +99,7 @@ export function IslandHUD({
                   width: "100%",
                   padding: "9px 0",
                   borderRadius: 8,
-                  background: "#2d5a3d",
+                  background: "#3d4e3c",
                   color: "#fff",
                   border: "none",
                   cursor: "pointer",
@@ -124,7 +124,7 @@ export function IslandHUD({
             style={{
               padding: "9px 18px",
               borderRadius: 8,
-              background: "#2d5a3d",
+              background: "#3d4e3c",
               color: "#fff",
               border: "none",
               cursor: "pointer",
