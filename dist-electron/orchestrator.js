@@ -14,10 +14,60 @@ import { app, shell } from "electron";
 import { CHANNELS } from "./ipc/channels.js";
 import { generateTaskId, getTaskPaths, initBottleFile, appendTaskEvent, } from "./tasks.js";
 import fs from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import path from "node:path";
-import { getDataDir } from "./data.js";
+import { getDataDir, getNookConfig } from "./data.js";
 const JOURNAL_DIR = path.join(getDataDir(), "journals");
 const TASKS_DIR = path.join(getDataDir(), "tasks");
+const CREDENTIALS_DIR = path.join(getDataDir(), "credentials");
+// ── MCP ───────────────────────────────────────────────────────────────────────
+// Set NOOK_MCP_ENABLED=1 to activate Google Calendar (Sherb), Gmail (Lily),
+// Sheets (Broccolo), and web fetch (Stitches). See docs/mcp-setup.md for
+// credential setup instructions.
+const MCP_ENABLED = process.env.NOOK_MCP_ENABLED === "1";
+const CALENDAR_MCP = {
+    command: "npx",
+    args: ["-y", "@cocal/google-calendar-mcp"],
+    env: {
+        GOOGLE_OAUTH_CREDENTIALS: path.join(CREDENTIALS_DIR, "calendar-oauth.json"),
+        GOOGLE_CALENDAR_MCP_TOKEN_PATH: path.join(CREDENTIALS_DIR, "calendar-tokens.json"),
+        ENABLED_TOOLS: "list-events,search-events,get-current-time",
+    },
+};
+const GMAIL_MCP = {
+    command: "npx",
+    args: ["-y", "@gongrzhe/server-gmail-autoauth-mcp"],
+    env: {
+        GMAIL_OAUTH_PATH: path.join(CREDENTIALS_DIR, "gmail-oauth.keys.json"),
+        GMAIL_CREDENTIALS_PATH: path.join(CREDENTIALS_DIR, "gmail-credentials.json"),
+    },
+};
+// Read project_id directly from service account JSON so the user doesn't
+// need to set GOOGLE_PROJECT_ID separately — it's already in the key file.
+function buildSheetsMCP() {
+    const keyPath = path.join(CREDENTIALS_DIR, "sheets-service-account.json");
+    let projectId = "";
+    try {
+        const sa = JSON.parse(readFileSync(keyPath, "utf-8"));
+        projectId = sa.project_id ?? "";
+    }
+    catch {
+        /* file missing at module load — MCP will fail gracefully at runtime */
+    }
+    return {
+        command: "npx",
+        args: ["-y", "mcp-gsheets"],
+        env: {
+            GOOGLE_APPLICATION_CREDENTIALS: keyPath,
+            ...(projectId ? { GOOGLE_PROJECT_ID: projectId } : {}),
+        },
+    };
+}
+const SHEETS_MCP = buildSheetsMCP();
+const FETCH_MCP = {
+    command: "uvx",
+    args: ["mcp-server-fetch"],
+};
 async function getPastBottles(excludeTaskId, limit) {
     try {
         const entries = await fs.readdir(TASKS_DIR);
@@ -115,6 +165,17 @@ Example with stitches (use when task is creative or would benefit from unexpecte
     { "villager": "piper",   "action": "close the task with a narrative and update her journal" }
   ]
 }`;
+// Appended to Sherb's plan system prompt only when MCP_ENABLED — tells him to
+// check the calendar before proposing a plan, then still return pure JSON.
+const SHERB_PLAN_CALENDAR_NOTE = `
+
+Google Calendar is available via mcp__calendar__list-events and mcp__calendar__get-current-time.
+Before outputting your JSON plan:
+1. Call get-current-time to confirm today's date.
+2. Call list-events to check Jackson's next 7 days for relevant deadlines, shoots, or meetings.
+3. Use that context to choose the right villagers and urgency — e.g. if there's a deadline tomorrow, keep the plan lean.
+If either tool fails, skip it silently and proceed to the JSON output.
+After checking the calendar (or if it fails), output ONLY valid JSON — no explanation, no markdown fences.`;
 const SHERB_EXEC_SYSTEM = `You are Sherb, the island planner on Nook Island.
 Execute the approved plan by summoning each villager using the Agent tool.
 Delegate each step exactly as listed in the plan.
@@ -161,6 +222,9 @@ Follow CLAUDE.md rules. Keep your tone friendly and concise.`;
 // Broccolo's system-level audit log covers task history for the island.
 function buildStitchesPrompt(paths) {
     const journalPath = path.join(JOURNAL_DIR, "stitches.json");
+    const fetchNote = MCP_ENABLED
+        ? `\n\n**Web fetch available (mcp__fetch__fetch):** If the task description includes a URL, or you want to pull a specific reference page to seed your ideation, fetch it first. If fetch fails, note "⚠️ fetch unavailable" in your journey section and ideate from the task description alone.`
+        : "";
     return `You are Stitches, a patchwork bear villager on Nook Island. You are the island's Ideator — you make unexpected leaps, find wild connections, and ask "what if" before anyone else has thought to.
 
 Your files:
@@ -178,13 +242,16 @@ Instructions:
 4. Read your journal at ${journalPath}. Update the userFacts field with anything you noticed about Jackson's creative patterns or what kinds of tasks he tends to bring, then write the COMPLETE JSON back (preserving all other fields exactly as-is, including completedTasks).
    If the file is missing or unparseable, start fresh: { villagerId: "stitches", userFacts: {}, completedTasks: [], relationships: {}, baseline: null }.
 5. Do NOT touch "## ✉️ Final Output". Do NOT research anything — ideate only.
-`;
+${fetchNote}`;
 }
 // NOTE: taskId intentionally excluded from signature — Lily runs mid-pipeline (after Maple,
 // before Zucker) and her prompt body does not use it. Consequently, completedTasks in lily.json
 // is never populated; Broccolo's system-level audit log covers task history for the island.
 function buildLilyPrompt(paths) {
     const journalPath = path.join(JOURNAL_DIR, "lily.json");
+    const gmailNote = MCP_ENABLED
+        ? `\n\n**Gmail access (mcp__gmail__search_emails, mcp__gmail__read_email):** Before writing your brief, search Gmail for emails related to this task — try keywords from the task description (subject, sender, project name). If you find a relevant client thread or brief, read it and extract key context to weave into your brief. If Gmail is unavailable, note "⚠️ inbox unavailable" in your journey section and continue without it.`
+        : "";
     return `You are Lily, a gentle frog villager on Nook Island. You are the island's Listener — you hear what people really need beneath what they ask for.
 
 Your files:
@@ -205,7 +272,7 @@ Instructions:
 4. Read your journal at ${journalPath}. Update the userFacts field with anything you noticed about Jackson's preferences or audience patterns, then write the COMPLETE JSON back (preserving all other fields exactly as-is, including completedTasks).
    If the file is missing or unparseable, start fresh: { villagerId: "lily", userFacts: {}, completedTasks: [], relationships: {}, baseline: null }.
 5. Do NOT touch "## ✉️ Final Output" or any other villager's journey section.
-`;
+${gmailNote}`;
 }
 function buildZuckerPrompt(paths) {
     return `You are Zucker, a laid-back octopus villager and the island's writer on Nook Island.
@@ -270,11 +337,14 @@ Instructions:
 4. Do NOT touch the "## ✉️ Final Output" section.
 `;
 }
-function buildBroccoloPrompt(paths) {
+function buildBroccoloPrompt(paths, sheetsId) {
     const journalPath = path.join(JOURNAL_DIR, "broccolo.json");
     const pastList = paths.pastBottles.length > 0
         ? paths.pastBottles.map(p => `- ${p}`).join("\n")
         : "(no past tasks yet)";
+    const sheetsNote = MCP_ENABLED && sheetsId
+        ? `\n\n**Google Sheets sync (mcp__sheets__sheets_append_values):** After writing to your local journal, append one summary row to spreadsheet ID "${sheetsId}", sheet name "Task Log", range "Task Log!A:D". Row values: [ISO date, taskId, task description (≤50 chars), villagers used (comma-separated, from the bottle's Journey headings)]. Use valueInputOption "RAW". If Sheets fails, note "⚠️ sheets sync failed" in your journey section and proceed — local journal is the source of truth.`
+        : "";
     return `You are Broccolo, a methodical caterpillar villager on Nook Island. You are the island's tracker — you find patterns, measure state over time, and keep careful records.
 
 Your files:
@@ -293,7 +363,7 @@ Instructions:
 4. Read your journal at ${journalPath}. Update only the userFacts and relationships fields with any new patterns you noticed, then write the COMPLETE JSON back (preserving all other fields exactly as-is, including completedTasks — the island system already logged this task automatically, do not touch that array).
    If the file is missing or unparseable, start fresh with the JournalFile schema (villagerId: "broccolo", userFacts: {}, completedTasks: [], relationships: {}, baseline: null).
 5. Do NOT touch "## ✉️ Final Output" or any other villager's journey section.
-`;
+${sheetsNote}`;
 }
 /** Extract JSON plan from Sherb's result string. Tries direct parse, falls back to regex. */
 function parsePlan(raw) {
@@ -361,9 +431,12 @@ export async function runTwoStepSherb(win, description, onPlanProposed) {
     for await (const message of query({
         prompt: description,
         options: {
-            systemPrompt: SHERB_PLAN_SYSTEM + islandMemory,
-            allowedTools: [], // no tools — pure reasoning
-            maxTurns: 1,
+            systemPrompt: SHERB_PLAN_SYSTEM + islandMemory + (MCP_ENABLED ? SHERB_PLAN_CALENDAR_NOTE : ""),
+            allowedTools: MCP_ENABLED
+                ? ["mcp__calendar__list-events", "mcp__calendar__search-events", "mcp__calendar__get-current-time"]
+                : [], // no tools in base mode — pure reasoning
+            maxTurns: MCP_ENABLED ? 3 : 1, // MCP needs turns for tool call + result + JSON
+            mcpServers: MCP_ENABLED ? { calendar: CALENDAR_MCP } : undefined,
             cwd: app.getAppPath(),
             settingSources: ["project"],
         },
@@ -422,18 +495,32 @@ Pass them the bottle and notes file paths so they know where to write their outp
     let currentAgent = "sherb";
     const pastBottlePaths = await getPastBottles(taskId, 10);
     const agentPaths = { ...paths, taskId, pastBottles: pastBottlePaths };
+    const config = await getNookConfig();
     for await (const message of query({
         prompt: execPrompt,
         options: {
             systemPrompt: SHERB_EXEC_SYSTEM,
-            allowedTools: ["Agent", "Read", "Write", "WebSearch"],
-            // NOTE: parent allowedTools gates subagent tool execution even in dontAsk mode.
-            // Write and WebSearch here are used by Maple/Zucker/Marshal (not Sherb directly).
-            // Sherb's system prompt ensures he only uses Agent and Read.
+            allowedTools: [
+                "Agent", "Read", "Write", "WebSearch",
+                // MCP tools for subagents — parent allowedTools gates all subagent tool calls.
+                // Only present when MCP_ENABLED; gated here so non-MCP mode has zero overhead.
+                ...(MCP_ENABLED ? [
+                    "mcp__gmail__search_emails", "mcp__gmail__read_email",
+                    "mcp__sheets__sheets_get_values", "mcp__sheets__sheets_append_values",
+                    "mcp__fetch__fetch",
+                ] : []),
+            ],
+            // Define all MCP servers once at the parent level; agents reference by name string.
+            mcpServers: MCP_ENABLED ? {
+                gmail: GMAIL_MCP,
+                sheets: SHEETS_MCP,
+                fetch: FETCH_MCP,
+            } : undefined,
             agents: {
                 stitches: {
                     description: "Use Stitches as the very first villager when the task is creative, open-ended, or needs unexpected angles before research. She brainstorms freely from the raw task description and writes a spark brief for Maple. Always summon before maple.",
-                    tools: ["Read", "Write"],
+                    tools: ["Read", "Write", ...(MCP_ENABLED ? ["mcp__fetch__fetch"] : [])],
+                    mcpServers: MCP_ENABLED ? ["fetch"] : undefined,
                     prompt: buildStitchesPrompt(paths),
                 },
                 maple: {
@@ -443,7 +530,8 @@ Pass them the bottle and notes file paths so they know where to write their outp
                 },
                 lily: {
                     description: "Use Lily when the task is audience-specific, ambiguous in scope, or needs a requirements brief before Zucker drafts. She translates Maple's research into a clear 'what does Jackson actually need' brief. Run after Maple, before Zucker.",
-                    tools: ["Read", "Write"],
+                    tools: ["Read", "Write", ...(MCP_ENABLED ? ["mcp__gmail__search_emails", "mcp__gmail__read_email"] : [])],
+                    mcpServers: MCP_ENABLED ? ["gmail"] : undefined,
                     prompt: buildLilyPrompt(paths),
                 },
                 zucker: {
@@ -463,13 +551,14 @@ Pass them the bottle and notes file paths so they know where to write their outp
                 },
                 broccolo: {
                     description: "Use Broccolo to archive the completed task and identify patterns from recent task history. Summon after Piper when the task is analytical, recurring, or when historical patterns would add value.",
-                    tools: ["Read", "Write"],
-                    prompt: buildBroccoloPrompt(agentPaths),
+                    tools: ["Read", "Write", ...(MCP_ENABLED ? ["mcp__sheets__sheets_get_values", "mcp__sheets__sheets_append_values"] : [])],
+                    mcpServers: MCP_ENABLED ? ["sheets"] : undefined,
+                    prompt: buildBroccoloPrompt(agentPaths, config.sheetsId ?? ""),
                 },
             },
             permissionMode: "dontAsk",
             maxTurns: 30,
-            maxBudgetUsd: 1.0,
+            maxBudgetUsd: 2.0,
             cwd: app.getAppPath(),
             settingSources: ["project"],
             hooks: {
@@ -495,7 +584,15 @@ Pass them the bottle and notes file paths so they know where to write their outp
                 PreToolUse: [{
                         hooks: [async (input) => {
                                 const { tool_name, tool_input } = input;
-                                const realTools = ["WebSearch"];
+                                const realTools = [
+                                    "WebSearch",
+                                    ...(MCP_ENABLED ? [
+                                        "mcp__gmail__search_emails", "mcp__gmail__read_email",
+                                        "mcp__calendar__list-events", "mcp__calendar__search-events", "mcp__calendar__get-current-time",
+                                        "mcp__sheets__sheets_get_values", "mcp__sheets__sheets_append_values",
+                                        "mcp__fetch__fetch",
+                                    ] : []),
+                                ];
                                 const event = {
                                     type: "tool_call",
                                     taskId,

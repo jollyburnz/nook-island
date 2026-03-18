@@ -45,4 +45,15 @@ export async function initDataDir() {
     }
     console.log(`[data] data dir ready: ${base}`);
 }
+/** Read ~/Library/Application Support/NookIsland/config.json. Returns {} if missing. */
+export async function getNookConfig() {
+    const configPath = path.join(getDataDir(), "credentials", "config.json");
+    try {
+        const raw = await fs.readFile(configPath, "utf-8");
+        return JSON.parse(raw);
+    }
+    catch {
+        return {};
+    }
+}
 //# sourceMappingURL=data.js.map
