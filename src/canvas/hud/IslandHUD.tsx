@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { TownHall } from "../../components/TownHall";
 import { PlanApproval } from "../../components/PlanApproval";
 import { WorkflowPanel } from "../../components/WorkflowPanel";
+import { BottleHUD } from "../../components/BottleHUD";
 import type { IslandEvent } from "../../core/types";
 
 type Phase = "idle" | "plan_proposed" | "executing" | "complete" | "error";
@@ -87,6 +88,7 @@ export function IslandHUD({
             right: 24,
             maxHeight: "calc(100vh - 48px)",
             overflowY: "auto",
+            pointerEvents: "auto",
           }}
         >
           <div style={sideCard}>
@@ -112,6 +114,11 @@ export function IslandHUD({
             )}
           </div>
         </div>
+      )}
+
+      {/* Bottle journey HUD — bottom-left */}
+      {(phase === "executing" || phase === "complete") && (
+        <BottleHUD events={events} />
       )}
 
       {/* Error */}

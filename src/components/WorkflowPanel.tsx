@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { IslandEvent } from "../core/types";
 
 interface Props {
@@ -6,14 +7,8 @@ interface Props {
 }
 
 const VILLAGER_EMOJI: Record<string, string> = {
-  maple: "🐻",
-  zucker: "🐙",
-  marshal: "🐿️",
-  sherb: "🐐",
-  piper: "🦜",
-  broccolo: "🐛",
-  lily: "🐸",
-  stitches: "🧸",
+  maple: "🐻", zucker: "🐙", marshal: "🐿️", sherb: "🐐",
+  piper: "🦜", broccolo: "🐛", lily: "🐸", stitches: "🧸",
 };
 
 type ToolCallEvent = Extract<IslandEvent, { type: "tool_call" }>;
@@ -46,102 +41,165 @@ function buildAgentSections(events: IslandEvent[]): AgentSection[] {
 export function WorkflowPanel({ events, cost }: Props) {
   const sections = buildAgentSections(events);
   const isComplete = events.some((e) => e.type === "task_complete");
+  const activeRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [sections.length, sections[sections.length - 1]?.tools.length]);
 
   return (
-    <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
+    <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
+
+      {/* Header */}
+      <div
+        style={{
+          fontSize: 11,
+          fontWeight: 800,
+          letterSpacing: 1.2,
+          textTransform: "uppercase",
+          color: "#9e8364",
+          paddingBottom: 4,
+          borderBottom: "1.5px solid #d8ccb6",
+        }}
+      >
+        🏝️ Village Pipeline
+      </div>
+
+      {/* Waiting state */}
       {sections.length === 0 && !isComplete && (
         <div
           style={{
-            background: "#d8ccb6",           // Parchment
-            border: "2px solid #9e8364",     // Worn Terra
+            background: "#f0e8d8",
+            border: "1.5px dashed #c4b89a",
             borderRadius: 6,
-            padding: 14,
-            fontSize: 13,
-            color: "#3d4e3c",
-            opacity: 0.85,
+            padding: "10px 12px",
+            fontSize: 12,
+            color: "#9e8364",
           }}
         >
-          ⟳ Waiting for villagers to start…
+          ⟳ Waiting for villagers…
         </div>
       )}
 
+      {/* Agent cards */}
       {sections.map((section, i) => {
         const active = !section.done && !isComplete;
         return (
           <div
             key={i}
+            ref={active ? activeRef : null}
             style={{
-              background: "#fff8e7",                                           // Cream Press
-              border: `2px solid ${active ? "#f9a916" : "#2b2b26"}`,          // Amber active / Ink done
+              background: active ? "#fffdf4" : "#f8f2e4",
+              border: `2px solid ${active ? "#f9a916" : "#c4b89a"}`,
               borderRadius: 6,
-              padding: 14,
-              boxShadow: active ? "2px 2px 0 #f9a916" : "2px 2px 0 #2b2b26",
+              padding: "10px 12px",
+              boxShadow: active ? "2px 2px 0 #f9a916" : "none",
+              transition: "border-color 0.2s, box-shadow 0.2s",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: section.tools.length > 0 ? 8 : 0,
-              }}
-            >
-              <span style={{ fontSize: 18 }}>
+            {/* Agent header row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+              <span style={{ fontSize: 17 }}>
                 {VILLAGER_EMOJI[section.agentId] ?? "🏝️"}
               </span>
-              <strong style={{ fontSize: 14, color: "#3d4e3c", fontWeight: 800 }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: "#2b2b26", flex: 1 }}>
                 {section.agentId}
-              </strong>
+              </span>
               <span
                 style={{
-                  marginLeft: "auto",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: active ? "#f9a916" : "#9e8364",   // Amber active / Worn Terra done
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: 0.5,
+                  textTransform: "uppercase",
+                  color: active ? "#f9a916" : section.done || isComplete ? "#3d4e3c" : "#9e8364",
+                  background: active ? "#fff3c8" : section.done || isComplete ? "#d4eacc" : "transparent",
+                  padding: active || section.done || isComplete ? "2px 6px" : undefined,
+                  borderRadius: 4,
                 }}
               >
                 {section.done || isComplete ? "✓ done" : "⟳ working"}
               </span>
             </div>
 
-            {section.tools.map((tool, j) => (
+            {/* Tool list */}
+            {section.tools.length > 0 && (
               <div
-                key={j}
                 style={{
-                  fontSize: 12,
-                  padding: "2px 0",
-                  color: "#9e8364",           // Worn Terra for tool list
+                  marginTop: 8,
                   display: "flex",
-                  gap: 6,
-                  alignItems: "center",
+                  flexDirection: "column",
+                  gap: 3,
+                  paddingLeft: 4,
+                  borderLeft: "2px solid #e8dcc8",
                 }}
               >
-                <span style={{ width: 14, textAlign: "center", color: "#f9a916" }}>
-                  {tool.real ? "⚡" : "·"}
-                </span>
-                <span>{tool.tool}</span>
+                {section.tools.map((tool, j) => (
+                  <div
+                    key={j}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 11,
+                      color: "#7a6a52",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 10,
+                        lineHeight: 1,
+                        color: tool.real ? "#f9a916" : "#c4b89a",
+                        fontWeight: 700,
+                        width: 12,
+                        textAlign: "center",
+                      }}
+                    >
+                      {tool.real ? "⚡" : "·"}
+                    </span>
+                    <span
+                      style={{
+                        background: tool.real ? "#fff3c8" : "#f0e8d8",
+                        border: `1px solid ${tool.real ? "#f9d060" : "#ddd0ba"}`,
+                        borderRadius: 4,
+                        padding: "1px 6px",
+                        fontFamily: "monospace",
+                        fontSize: 10.5,
+                        color: tool.real ? "#7a4f00" : "#9e8364",
+                      }}
+                    >
+                      {tool.tool}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         );
       })}
 
+      {/* Completion banner */}
       {isComplete && cost !== null && (
         <div
           style={{
-            background: "#3d4e3c",          // Undergrowth
+            background: "#3d4e3c",
             color: "#fff8e7",
             border: "2px solid #2b2b26",
             borderRadius: 6,
-            padding: 14,
+            padding: "12px 14px",
             textAlign: "center",
             boxShadow: "3px 3px 0 #2b2b26",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
           }}
         >
-          <div style={{ fontSize: 22, marginBottom: 4 }}>📬</div>
-          <div style={{ fontSize: 14, fontWeight: 800 }}>Delivered to mailbox</div>
-          <div style={{ fontSize: 12, opacity: 0.75, marginTop: 4 }}>
-            Cost: ${cost.toFixed(4)}
+          <span style={{ fontSize: 20 }}>📬</span>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 800 }}>Delivered to mailbox</div>
+            <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>
+              ${cost.toFixed(4)} spent
+            </div>
           </div>
         </div>
       )}
